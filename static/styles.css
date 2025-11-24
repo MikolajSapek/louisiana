@@ -1,0 +1,448 @@
+:root {
+    color-scheme: light dark;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    background: #0a3dbb;
+    color: #fefefe;
+}
+
+main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 72px;
+}
+
+h1 {
+    font-size: 2.4rem;
+    margin-bottom: 0.5rem;
+}
+
+p.lead {
+    margin-top: 0;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.card {
+    background: rgba(5, 19, 58, 0.55);
+    border-radius: 18px;
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(0, 15, 40, 0.35);
+    backdrop-filter: blur(12px);
+}
+
+form {
+    display: grid;
+    gap: 20px;
+}
+
+details.panel {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+details.panel summary {
+    cursor: pointer;
+    padding: 16px 18px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    list-style: none;
+    position: relative;
+}
+
+details.panel[open] summary {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+details.panel summary::marker,
+details.panel summary::-webkit-details-marker {
+    display: none;
+}
+
+details.panel summary::after {
+    content: "▾";
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+details.panel[open] summary::after {
+    content: "▴";
+}
+
+.panel-body {
+    padding: 16px 18px 24px;
+    display: grid;
+    gap: 16px;
+}
+
+.custom-font-field[hidden] {
+    display: none !important;
+}
+
+.custom-font-field {
+    display: grid;
+    gap: 8px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+textarea,
+input,
+select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.08);
+    color: inherit;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+input[type="color"] {
+    padding: 4px;
+    height: 48px;
+}
+
+input[type="checkbox"] {
+    width: auto;
+    accent-color: #ffdd57;
+}
+
+.inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.inline input[type="checkbox"] {
+    margin: 0;
+}
+
+button {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffdd57, #ffa600);
+    color: #1b1630;
+    font-weight: 700;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+section.columns {
+    display: grid;
+    gap: 24px;
+}
+
+@media (min-width: 880px) {
+    section.columns {
+        grid-template-columns: 1.1fr 0.9fr;
+        align-items: flex-start;
+    }
+}
+
+.result-card {
+    margin-top: 32px;
+    background: rgba(7, 26, 77, 0.65);
+}
+
+#messages {
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.alert-warning {
+    background: rgba(255, 221, 87, 0.16);
+    color: #fff3bf;
+}
+
+.alert-error {
+    background: rgba(255, 107, 107, 0.2);
+    color: #ffd4d4;
+}
+
+.alert-success {
+    background: rgba(87, 255, 157, 0.18);
+    color: #d4ffea;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.button-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-weight: 600;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.button-link.secondary {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.button-link:hover {
+    background: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
+}
+
+fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+fieldset legend {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.helper-text {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 4px;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 12, 30, 0.78);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 24px;
+}
+
+.modal-overlay[hidden] {
+    display: none !important;
+}
+
+.modal-content {
+    position: relative;
+    max-width: min(90vw, 1200px);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.modal-map-wrapper {
+    position: relative;
+    display: inline-block;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow: auto;
+}
+
+.modal-map-wrapper img,
+#modal-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 90vw;
+    max-height: 80vh;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.signature-settings {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.signature-settings .checkbox-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.panel-body .checkbox-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.signature-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+#modal-label-overlay {
+    position: absolute;
+    inset: 0;
+}
+
+#modal-close {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    color: #1b1630;
+    font-size: 1.8rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+#modal-close:hover {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.label-name {
+    font-weight: 600;
+    flex: 1;
+}
+
+.label-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 36px);
+    grid-template-rows: repeat(2, 36px);
+    gap: 6px;
+    justify-items: center;
+}
+
+.label-buttons button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.label-buttons button:hover {
+    background: rgba(255, 255, 255, 0.32);
+    transform: translateY(-1px);
+}
+
+.label-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.map-preview-wrapper {
+    position: relative;
+    width: min(100%, 520px);
+    margin: 0 auto;
+}
+
+.map-preview-wrapper img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+#label-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.label-overlay-item {
+    position: absolute;
+    /* anchor = bottom-center to match Matplotlib va='bottom', ha='center' */
+    transform: translate(-50%, -100%);
+    pointer-events: auto;
+    cursor: grab;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: clamp(10px, 1.8vw, 18px);
+    font-family: inherit;
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.7);
+    user-select: none;
+    transition: transform 0.15s ease;
+}
+
+.label-overlay-item:hover {
+    transform: translate(-50%, -100%) scale(1.05);
+}
+
+.label-overlay-item.dragging {
+    cursor: grabbing;
+    opacity: 0.85;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.modal-actions .button-link {
+    padding: 12px 22px;
+}

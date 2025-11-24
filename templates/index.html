@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Generator mapy trasy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main>
+        <section class="card">
+            <h1>Generator map podróży</h1>
+            <p class="lead">Wprowadź listę miast, dopasuj wygląd i wygeneruj minimalistyczny plakat trasy.</p>
+        </section>
+
+        <section class="columns">
+            <section class="card">
+                <form id="route-form">
+                    <details class="panel" open>
+                        <summary>Lista miast</summary>
+                        <div class="panel-body">
+                            <label for="cities">Miasta (jedno w linii lub oddzielone przecinkiem)</label>
+                            <textarea id="cities" name="cities" rows="6" placeholder="Warszawa
+Wiedeń
+Mediolan
+Monaco"></textarea>
+                            <p class="helper-text">Możesz powtarzać miasta, aby pokazać powroty.</p>
+                        </div>
+                    </details>
+
+                    <details class="panel">
+                        <summary>Wygląd plakatu</summary>
+                        <div class="panel-body">
+                            <label for="background">Kolor tła</label>
+                            <input type="color" id="background" name="background" value="#0a3dbb">
+
+                            <label for="font">Czcionka podpisów miast</label>
+                            <select id="font" name="font">
+                                <option value="">Automatycznie (Helvetica)</option>
+                                <option value="Helvetica">Helvetica</option>
+                                <option value="Arial">Arial</option>
+                                <option value="Futura">Futura</option>
+                                <option value="Avenir">Avenir</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Baskerville">Baskerville</option>
+                                <option value="Garamond">Garamond</option>
+                                <option value="Roboto">Roboto</option>
+                                <option value="custom">Inna (wpisz poniżej)</option>
+                            </select>
+                            <div class="custom-font-field" id="font_custom_container" hidden>
+                                <label for="font_custom">Nazwa własnej czcionki</label>
+                                <input type="text" id="font_custom" name="font_custom" placeholder="np. Futura PT">
+                            </div>
+
+                            <label for="font_color">Kolor podpisów</label>
+                            <input type="color" id="font_color" name="font_color" value="#ffffff">
+
+                            <label class="inline">
+                                <input type="checkbox" id="show_borders" name="show_borders">
+                                Pokaż granice państw
+                            </label>
+                        </div>
+                    </details>
+
+                    <details class="panel">
+                        <summary>Styl trasy i punktów</summary>
+                        <div class="panel-body">
+                            <label for="line_style">Styl linii</label>
+                            <select id="line_style" name="line_style">
+                                <option value="dashed" selected>Linia przerywana</option>
+                                <option value="dotted">Linia kropkowana</option>
+                                <option value="dot">Same kropki (bez linii)</option>
+                                <option value="dashdot">Linia mieszana</option>
+                                <option value="solid">Linia ciągła</option>
+                            </select>
+
+                            <label for="line_color">Kolor linii</label>
+                            <input type="color" id="line_color" name="line_color" value="#f2f4ff">
+
+                            <label for="line_width">Szerokość linii</label>
+                            <input type="number" id="line_width" name="line_width" min="0.5" max="10" step="0.1" placeholder="auto">
+                            <p class="helper-text">Pozostaw puste, aby dopasować szerokość automatycznie.</p>
+
+                            <label for="point_style">Kształt punktów</label>
+                            <select id="point_style" name="point_style">
+                                <option value="circle" selected>Kółko</option>
+                                <option value="square">Kwadrat</option>
+                                <option value="triangle">Trójkąt</option>
+                                <option value="diamond">Diament</option>
+                                <option value="cross">Krzyżyk</option>
+                                <option value="star">Gwiazda</option>
+                            </select>
+
+                            <label for="point_color">Kolor punktów</label>
+                            <input type="color" id="point_color" name="point_color" value="#f2f4ff">
+
+                            <label for="point_size">Rozmiar punktów</label>
+                            <input type="number" id="point_size" name="point_size" min="10" max="200" step="5" placeholder="auto">
+                            <p class="helper-text">Domyślnie punkty mają średni rozmiar (~50 w Matplotlib).</p>
+                        </div>
+                    </details>
+
+                    <details class="panel">
+                        <summary>Napisy na plakacie</summary>
+                        <div class="panel-body">
+                            <label for="title">Tytuł na górze</label>
+                            <input type="text" id="title" name="title" placeholder="Nasza podróż po Europie">
+
+                            <label for="footer_left">Lewy dolny podpis</label>
+                            <input type="text" id="footer_left" name="footer_left" placeholder="Data / Autor">
+
+                            <label for="footer_right">Prawy dolny podpis</label>
+                            <input type="text" id="footer_right" name="footer_right" placeholder="Dodatkowe informacje">
+
+                            <label for="text_font">Czcionka napisów (tytuł/stopki)</label>
+                            <select id="text_font" name="text_font">
+                                <option value="">Jak podpisy miast</option>
+                                <option value="Helvetica">Helvetica</option>
+                                <option value="Arial">Arial</option>
+                                <option value="Futura">Futura</option>
+                                <option value="Avenir">Avenir</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Baskerville">Baskerville</option>
+                                <option value="Garamond">Garamond</option>
+                                <option value="Roboto">Roboto</option>
+                                <option value="custom">Inna (wpisz poniżej)</option>
+                            </select>
+                            <div class="custom-font-field" id="text_font_custom_container" hidden>
+                                <label for="text_font_custom">Własna czcionka napisów</label>
+                                <input type="text" id="text_font_custom" name="text_font_custom" placeholder="np. Playfair Display">
+                            </div>
+                        </div>
+                    </details>
+
+                    <details class="panel">
+                        <summary>Parametry plakatu</summary>
+                        <div class="panel-body">
+                            <label for="paper_format">Format papieru</label>
+                            <select id="paper_format" name="paper_format">
+                                {% for option in paper_formats %}
+                                <option value="{{ option.id }}">{{ option.label }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label for="dpi">DPI</label>
+                            <input type="number" id="dpi" name="dpi" min="72" max="600" step="10" placeholder="np. 300">
+                            <p class="helper-text">Pozostaw puste, aby użyć domyślnej wartości (300 DPI).</p>
+
+                            <div class="signature-settings">
+                                <label class="checkbox-inline" for="signature_enabled">
+                                    <input type="checkbox" id="signature_enabled" name="signature_enabled">
+                                    Dodaj mój podpis
+                                </label>
+                                <div id="signature_options" class="signature-options" hidden>
+                                    <label for="signature_path">Plik z podpisem (PNG z przezroczystością)</label>
+                                    <input type="text" id="signature_path" name="signature_path" placeholder="static/signature.png">
+
+                                    <label for="signature_position">Pozycja podpisu</label>
+                                    <select id="signature_position" name="signature_position">
+                                        <option value="bottom_right">Prawy dolny róg</option>
+                                        <option value="bottom_left">Lewy dolny róg</option>
+                                        <option value="top_right">Prawy górny róg</option>
+                                        <option value="top_left">Lewy górny róg</option>
+                                    </select>
+
+                                    <label for="signature_scale">Skala podpisu (%)</label>
+                                    <input type="number" id="signature_scale" name="signature_scale" min="5" max="35" step="1" value="18">
+                                </div>
+                            </div>
+
+                            <label class="checkbox-inline" for="merge_bidirectional_routes">
+                                <input type="checkbox" id="merge_bidirectional_routes" name="merge_bidirectional_routes">
+                                Połącz lot i powrót w jedną linię
+                            </label>
+                        </div>
+                    </details>
+
+                    <button type="submit">Generuj mapę</button>
+                </form>
+            </section>
+
+            <section class="card result-card">
+                <div id="messages"></div>
+                <div id="spinner" hidden>Generowanie…</div>
+                <div class="map-preview-wrapper">
+                    <img id="map-preview" alt="Podgląd wygenerowanej mapy">
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <div id="modal-overlay" class="modal-overlay" hidden>
+        <div class="modal-content">
+            <button type="button" id="modal-close" aria-label="Zamknij podgląd">&times;</button>
+            <div class="modal-map-wrapper">
+                <img id="modal-image" alt="Podgląd plakatu w pełnej rozdzielczości">
+                <div id="modal-label-overlay" hidden></div>
+            </div>
+            <div class="modal-actions">
+                <button id="apply-labels-button" type="button" class="button-link secondary">Zastosuj etykiety</button>
+                <button id="download-button" type="button" class="button-link" style="display: none;">Pobierz obraz</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>
