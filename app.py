@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
-from flask import Flask, jsonify, render_template, request, url_for
+from flask import Flask, jsonify, render_template, request, send_from_directory, url_for
 
 from geocoder import Geocoder
 from map_generator import MapGenerator, PosterMapGenerator, LandscapePosterMapGenerator, LargePosterMapGenerator, LandscapeLargePosterMapGenerator
@@ -12,8 +13,13 @@ from label_overrides import load_overrides, update_override, reset_override, set
 
 BASE_DIR = Path(__file__).parent.resolve()
 STATIC_DIR = BASE_DIR / "static"
-MAPS_DIR = STATIC_DIR / "maps"
-MAPS_DIR.mkdir(parents=True, exist_ok=True)
+LOCAL_MAPS_DIR = STATIC_DIR / "maps"
+LOCAL_MAPS_DIR.mkdir(parents=True, exist_ok=True)
+
+TMP_DIR = Path(os.environ.get("TMPDIR") or "/tmp")
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+MAP_STORAGE_DIR = LOCAL_MAPS_DIR if not IS_VERCEL else (TMP_DIR / "maps")
+MAP_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 app = Flask(__name__, static_folder=str(STATIC_DIR), template_folder=str(BASE_DIR / "templates"))
 
@@ -74,6 +80,12 @@ def index() -> str:
         {"id": LandscapeLargePosterMapGenerator.FORMAT_ID, "label": "Plakat 100 × 60 cm (poziomy)"},
     ]
     return render_template("index.html", paper_formats=paper_formats)
+
+
+@app.route("/maps/<path:filename>")
+def serve_map(filename: str):
+    """Serwuje wygenerowane mapy zarówno lokalnie, jak i na Vercel."""
+    return send_from_directory(str(MAP_STORAGE_DIR), filename, mimetype="image/png")
 
 
 @app.post("/api/generate")
@@ -294,7 +306,7 @@ def _create_map(
     hidden_labels: Optional[set] = None,
 ) -> Dict[str, Any]:
     filename = output_filename or f"map_{uuid4().hex}.png"
-    output_path = MAPS_DIR / filename
+    output_path = MAP_STORAGE_DIR / filename
 
     paper_format_raw = options.get("paper_format")
     paper_format = paper_format_raw.strip().upper() if isinstance(paper_format_raw, str) else None
@@ -360,7 +372,7 @@ def _create_map(
     map_info["paper_format"] = paper_meta.get("format")
     map_info["paper_label"] = paper_meta.get("label")
     map_info["paper_orientation"] = paper_meta.get("orientation")
-    map_info["mapUrl"] = url_for("static", filename=f"maps/{filename}")
+    map_info["mapUrl"] = url_for("serve_map", filename=filename)
     return map_info
 
 

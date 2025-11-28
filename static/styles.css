@@ -424,6 +424,10 @@ fieldset legend {
     text-shadow: 0 0 6px rgba(0, 0, 0, 0.7);
     user-select: none;
     transition: transform 0.15s ease;
+    white-space: nowrap;
+    text-align: center;
+    letter-spacing: 0.02em;
+    font-weight: 600;
 }
 
 .label-overlay-item:hover {

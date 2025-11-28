@@ -275,12 +275,18 @@ function handleMapResponse(data) {
         const anchorLat = Number(entry.anchor_lat ?? 0);
         const dx = Number(entry.dx ?? 0);
         const dy = Number(entry.dy ?? 0);
+        const xRel = Number(entry.x_rel ?? 0);
+        const yRel = Number(entry.y_rel ?? 0);
         return {
             name: entry.name,
             anchor_lon: anchorLon,
             anchor_lat: anchorLat,
             dx,
             dy,
+            position_lon: anchorLon + dx,
+            position_lat: anchorLat + dy,
+            x_rel: xRel,
+            y_rel: yRel,
             locked: Boolean(entry.locked),
         };
     });
@@ -381,16 +387,28 @@ function renderLabelOverlay() {
         item.dataset.defaultLat = label.position_lat;
         item.title = label.name;
 
-        const position =
-            pendingOffsets[label.name] || {
-                lon: label.anchor_lon + label.dx,
-                lat: label.anchor_lat + label.dy,
-            };
-
-        const xRel = (position.lon - lonMin) / lonSpan;
-        const yRel = (position.lat - latMin) / latSpan;
+        // Use x_rel/y_rel from Python if available, otherwise calculate from position
+        let xRel, yRel;
+        if (label.x_rel !== undefined && label.y_rel !== undefined) {
+            // Use pre-calculated relative positions from Python
+            xRel = Math.max(0, Math.min(1, label.x_rel));
+            yRel = Math.max(0, Math.min(1, label.y_rel));
+        } else {
+            // Fallback: calculate from lon/lat position
+            const position =
+                pendingOffsets[label.name] || {
+                    lon: label.anchor_lon + label.dx,
+                    lat: label.anchor_lat + label.dy,
+                };
+            xRel = Math.max(0, Math.min(1, (position.lon - lonMin) / lonSpan));
+            yRel = Math.max(0, Math.min(1, (position.lat - latMin) / latSpan));
+        }
+        
+        // Map to axes coordinates (within the axes box)
         const xFig = axX0 + xRel * axWidth;
         const yFig = axY0 + yRel * axHeight;
+        
+        // Convert figure coordinates to image pixel coordinates
         const anchorX = (xFig / figWidth) * width;
         const anchorY = (1 - (yFig / figHeight)) * height;
 
@@ -398,6 +416,8 @@ function renderLabelOverlay() {
         const displayHeight = modalImage.clientHeight || height;
         const scaleXDisplay = displayWidth / width;
         const scaleYDisplay = displayHeight / height;
+        
+        // Position the label - CSS transform will center it horizontally
         item.style.left = `${anchorX * scaleXDisplay}px`;
         item.style.top = `${anchorY * scaleYDisplay}px`;
         item.style.fontSize = `${labelFontPxBase * scaleYDisplay}px`;
@@ -413,23 +433,25 @@ function renderLabelOverlay() {
         deleteButton.className = 'label-delete-button';
         deleteButton.textContent = '×';
         deleteButton.title = 'Ukryj etykietę';
+        // Small circular OUTLINE around X (red border), X pozostaje czytelne
+        // Bardzo mały przycisk X z cienką ramką, mocno odsunięty od tekstu, żeby nie zasłaniał napisu
         deleteButton.style.cssText = `
             position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 20px;
-            height: 20px;
+            top: -18px;
+            right: -18px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background: rgba(255, 77, 77, 0.9);
+            background: transparent;
             color: white;
-            border: none;
-            font-size: 16px;
+            border: 1px solid rgba(255, 77, 77, 0.95);
+            font-size: 5px;
             line-height: 1;
             cursor: pointer;
             display: none;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: none;
             z-index: 1000;
             pointer-events: auto;
         `;

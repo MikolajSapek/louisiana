@@ -325,25 +325,30 @@ class MapGenerator:
                 seen_names.add(city_name)
                 unique_cities.append(city)
 
-        # Calculate a small offset to place labels slightly above points
+        # Calculate a small vertical offset based ONLY on latitude span so that
+        # long poziome trasy nie powodują „odjechania” etykiet w pionie.
         lon_span_raw = max(lons) - min(lons) if len(lons) > 1 else 0.0
         lat_span_raw = max(lats) - min(lats) if len(lats) > 1 else 0.0
-        label_offset_y = max(lon_span_raw, lat_span_raw) * 0.01  # 1% of map span (smaller offset)
+        # Minimalny offset: ok. 0.1% wysokości mapy – etykiety bardzo blisko punktów.
+        label_offset_y = lat_span_raw * 0.001
         if label_offset_y == 0.0:
-            label_offset_y = 0.05  # smaller fallback for single point
+            label_offset_y = 0.001  # fallback dla pojedynczego punktu
         
         texts: List[plt.Text] = []
         for city in unique_cities:
             lon, lat = city["longitude"], city["latitude"]
             ov = (label_overrides or {}).get(city["name"]) if label_overrides else None
             if ov is None:
-                # No override: place label slightly above point
+                # No override: place label very close above point
                 target_x = lon
                 target_y = lat + label_offset_y
             else:
                 # Override exists: apply dx/dy offset
                 target_x = lon + float(ov.get("dx", 0.0))
                 target_y = lat + float(ov.get("dy", 0.0))
+
+            # Don't clamp - let labels be positioned naturally, even if slightly outside bounds
+            # The map margins should be sufficient to keep labels visible
 
             label_font_pt = self._label_font_size_pt()
             

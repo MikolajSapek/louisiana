@@ -131,6 +131,21 @@ python main.py clear
 - `static/` - Zasoby web (CSS, JS, wygenerowane mapy)
 - `route.json` - Plik z zapisaną trasą (tworzony automatycznie)
 
+## Wdrożenie na Vercel
+
+1. Upewnij się, że w projekcie istnieje plik `vercel.json` (zawiera build Python + reguły routingu) oraz katalog `api/` z `index.py`, który eksportuje aplikację Flask jako `handler`.
+2. Zainstaluj zależności lokalnie (`pip install -r requirements.txt`), a następnie uruchom środowisko developerskie Vercel:
+   ```bash
+   vercel dev
+   ```
+   Dzięki temu wszystkie żądania (`/`, `/api/*`, `/maps/*`, `/static/*`) będą obsługiwane przez tę samą instancję Flask co w chmurze.
+3. W środowisku Vercel obrazy zapisują się automatycznie w katalogu tymczasowym (`/tmp/maps`). Nowy endpoint `/maps/<nazwa_pliku>` serwuje je zarówno lokalnie, jak i z funkcji serverless, więc frontend działa identycznie jak w wersji desktopowej.
+4. Domyślne DPI nie zostało zmienione – nadal wynosi 300, a ograniczenie w formularzu pozwala na ręczne podbicie wartości, jeśli potrzebujesz większych plakatów.
+5. Aby zweryfikować działanie przed wdrożeniem:
+   - `python app.py` lub `flask --app app.py run` i wygeneruj mapę w UI,
+   - `curl -X POST http://localhost:5000/api/generate -H "Content-Type: application/json" -d '{"cities":"Warszawa\nBerlin"}'` i sprawdź, że `map.mapUrl` wskazuje na `/maps/...`,
+   - w trybie `vercel dev` upewnij się, że pobieranie gotowego pliku działa po kliknięciu „Pobierz obraz”.
+
 ## Uwagi
 
 - Aplikacja używa Nominatim API (OpenStreetMap), które wymaga opóźnienia między zapytaniami
