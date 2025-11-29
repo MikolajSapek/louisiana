@@ -1,9 +1,14 @@
 """
 Moduł generowania minimalistycznej mapy z trasą.
 """
+import os
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+# Configure matplotlib cache directory for Vercel (must be before importing matplotlib)
+if os.environ.get("VERCEL") == "1":
+    os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
 
 import matplotlib
 matplotlib.use("Agg")

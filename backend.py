@@ -5,6 +5,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
+# Configure matplotlib for Vercel (must be before importing matplotlib)
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+if IS_VERCEL:
+    # Set matplotlib config directory to /tmp on Vercel
+    os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
+
 from flask import Flask, jsonify, render_template, request, send_from_directory, url_for
 
 from geocoder import Geocoder
@@ -20,7 +26,7 @@ except (OSError, PermissionError):
     pass
 
 TMP_DIR = Path(os.environ.get("TMPDIR") or "/tmp")
-IS_VERCEL = os.environ.get("VERCEL") == "1"
+# IS_VERCEL is already set above for matplotlib config
 MAP_STORAGE_DIR = LOCAL_MAPS_DIR if not IS_VERCEL else (TMP_DIR / "maps")
 try:
     MAP_STORAGE_DIR.mkdir(parents=True, exist_ok=True)

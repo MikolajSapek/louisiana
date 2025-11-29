@@ -1,5 +1,10 @@
+import os
 import sys
 from pathlib import Path
+
+# Configure matplotlib for Vercel BEFORE any imports (must be first)
+if os.environ.get("VERCEL") == "1":
+    os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
 
 # Add parent directory to path to import backend
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -7,7 +12,7 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 try:
-    # Import Flask app from backend
+    # Import Flask app from backend (NOT app.py!)
     from backend import app
     
     # Vercel Python runtime can use either 'app' or 'handler'

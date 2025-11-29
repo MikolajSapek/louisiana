@@ -5,25 +5,46 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
+# Configure matplotlib for Vercel (must be before importing matplotlib)
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+if IS_VERCEL:
+    # Set matplotlib config directory to /tmp on Vercel
+    os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
+
 from flask import Flask, jsonify, render_template, request, send_from_directory, url_for
 
 from geocoder import Geocoder
-from map_generator import MapGenerator, PosterMapGenerator, LandscapePosterMapGenerator, LargePosterMapGenerator, LandscapeLargePosterMapGenerator
 from label_overrides import load_overrides, update_override, reset_override, set_override
 
 BASE_DIR = Path(__file__).parent.resolve()
 STATIC_DIR = BASE_DIR / "static"
 LOCAL_MAPS_DIR = STATIC_DIR / "maps"
-LOCAL_MAPS_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    LOCAL_MAPS_DIR.mkdir(parents=True, exist_ok=True)
+except (OSError, PermissionError):
+    # On Vercel, static directory might be read-only, that's okay
+    pass
 
 TMP_DIR = Path(os.environ.get("TMPDIR") or "/tmp")
-IS_VERCEL = os.environ.get("VERCEL") == "1"
+# IS_VERCEL is already set above for matplotlib config
 MAP_STORAGE_DIR = LOCAL_MAPS_DIR if not IS_VERCEL else (TMP_DIR / "maps")
-MAP_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+try:
+    MAP_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+except (OSError, PermissionError) as e:
+    # Log but don't fail - Vercel will create /tmp if needed
+    import logging
+    logging.warning(f"Could not create MAP_STORAGE_DIR {MAP_STORAGE_DIR}: {e}")
 
 app = Flask(__name__, static_folder=str(STATIC_DIR), template_folder=str(BASE_DIR / "templates"))
 
-geocoder = Geocoder()
+# Initialize geocoder lazily to avoid issues during module import on Vercel
+_geocoder = None
+
+def get_geocoder():
+    global _geocoder
+    if _geocoder is None:
+        _geocoder = Geocoder()
+    return _geocoder
 
 
 def _normalize_cities(cities_raw: Any) -> List[str]:
@@ -54,6 +75,7 @@ def _parse_bool(value: Any) -> bool:
 def _build_route(cities: List[str]) -> tuple[List[Dict[str, Any]], List[str]]:
     route: List[Dict[str, Any]] = []
     warnings: List[str] = []
+    geocoder = get_geocoder()
 
     for city in cities:
         coords = geocoder.get_coordinates(city)
@@ -71,6 +93,9 @@ def _build_route(cities: List[str]) -> tuple[List[Dict[str, Any]], List[str]]:
 
 @app.route("/")
 def index() -> str:
+    # Lazy import to avoid matplotlib initialization issues on Vercel
+    from map_generator import PosterMapGenerator, LandscapePosterMapGenerator, LargePosterMapGenerator, LandscapeLargePosterMapGenerator
+    
     paper_formats = [
         {"id": "", "label": "Automatycznie"},
         {"id": "POSTCARD", "label": "Pocztówka 10 × 15 cm (4 × 6 cali)"},
@@ -322,6 +347,9 @@ def _create_map(
         generator_kwargs["signature_scale"] = None
     overrides_payload = overrides or {}
     dpi_value = int(options.get("dpi") or 300)
+
+    # Lazy import to avoid matplotlib initialization issues on Vercel
+    from map_generator import MapGenerator, PosterMapGenerator, LandscapePosterMapGenerator, LargePosterMapGenerator, LandscapeLargePosterMapGenerator
 
     if paper_format == PosterMapGenerator.FORMAT_ID:
         generator = PosterMapGenerator(**generator_kwargs)
