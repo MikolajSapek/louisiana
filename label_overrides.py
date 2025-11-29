@@ -1,11 +1,19 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Dict
 
 BASE_DIR = Path(__file__).parent.resolve()
-OVERRIDES_PATH = BASE_DIR / "label_overrides.json"
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+TMP_DIR = Path(os.environ.get("TMPDIR") or "/tmp")
+
+# On Vercel, use /tmp for writable storage; otherwise use BASE_DIR
+if IS_VERCEL:
+    OVERRIDES_PATH = TMP_DIR / "label_overrides.json"
+else:
+    OVERRIDES_PATH = BASE_DIR / "label_overrides.json"
 
 def load_overrides() -> Dict[str, Dict[str, float]]:
     if not OVERRIDES_PATH.exists():
@@ -31,7 +39,15 @@ def load_overrides() -> Dict[str, Dict[str, float]]:
         return {}
 
 def save_overrides(data: Dict[str, Dict[str, float]]) -> None:
-    OVERRIDES_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    try:
+        # Ensure parent directory exists (especially for /tmp on Vercel)
+        OVERRIDES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        OVERRIDES_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    except (OSError, PermissionError) as e:
+        # On Vercel or read-only filesystem, log but don't fail
+        # Overrides will be lost between invocations, but that's acceptable
+        import logging
+        logging.warning(f"Could not save label overrides to {OVERRIDES_PATH}: {e}")
 
 def update_override(city: str, dx: float, dy: float) -> Dict[str, Dict[str, float]]:
     data = load_overrides()
