@@ -107,10 +107,16 @@ Monaco"></textarea>
                             <input type="text" id="title" name="title" placeholder="Nasza podróż po Europie">
 
                             <label for="footer_left">Lewy dolny podpis</label>
-                            <input type="text" id="footer_left" name="footer_left" placeholder="Data / Autor">
+                            <textarea id="footer_left" name="footer_left" rows="2" placeholder="Data / Autor"></textarea>
+                            <p class="helper-text">Użyj Enter dla układu pionowego (jeden nad drugim), spacja dla poziomego (obok siebie).</p>
 
                             <label for="footer_right">Prawy dolny podpis</label>
-                            <input type="text" id="footer_right" name="footer_right" placeholder="Dodatkowe informacje">
+                            <textarea id="footer_right" name="footer_right" rows="2" placeholder="Dodatkowe informacje"></textarea>
+                            <p class="helper-text">Użyj Enter dla układu pionowego (jeden nad drugim), spacja dla poziomego (obok siebie).</p>
+
+                            <label for="footer_font_size">Rozmiar czcionki stopek</label>
+                            <input type="number" id="footer_font_size" name="footer_font_size" min="8" max="72" step="1" placeholder="auto">
+                            <p class="helper-text">Pozostaw puste, aby użyć domyślnego rozmiaru (14pt).</p>
 
                             <label for="text_font">Czcionka napisów (tytuł/stopki)</label>
                             <select id="text_font" name="text_font">

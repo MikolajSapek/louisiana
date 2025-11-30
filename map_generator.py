@@ -104,6 +104,7 @@ class MapGenerator:
         title_text: Optional[str] = None,
         footer_left_text: Optional[str] = None,
         footer_right_text: Optional[str] = None,
+        footer_font_size: Optional[float] = None,
         text_font_family: Optional[str] = None,
         signature_enabled: bool = False,
         signature_path: Optional[str] = None,
@@ -135,6 +136,7 @@ class MapGenerator:
         self.title_text = title_text
         self.footer_left_text = footer_left_text
         self.footer_right_text = footer_right_text
+        self.footer_font_size = footer_font_size
         self.text_font_family = text_font_family
         self.signature_enabled = bool(signature_enabled)
         if signature_path:
@@ -701,30 +703,130 @@ class MapGenerator:
             footer_x_right = 0.98
             footer_y = 0.05
 
+        footer_font_size = self.footer_font_size if self.footer_font_size is not None else 14
+        
         if self.footer_left_text:
-            ax.text(
+            self._render_footer_text(
+                ax,
+                self.footer_left_text,
                 footer_x_left,
                 footer_y,
-                self.footer_left_text,
-                ha='left',
-                va='bottom',
-                fontsize=14,
-                fontfamily=font_family,
-                color=font_color,
-                transform=ax.transAxes,
+                self._detect_footer_layout(self.footer_left_text),
+                'left',
+                font_family,
+                font_color,
+                footer_font_size,
+                ax.transAxes,
             )
 
         if self.footer_right_text:
-            ax.text(
+            self._render_footer_text(
+                ax,
+                self.footer_right_text,
                 footer_x_right,
                 footer_y,
-                self.footer_right_text,
-                ha='right',
+                self._detect_footer_layout(self.footer_right_text),
+                'right',
+                font_family,
+                font_color,
+                footer_font_size,
+                ax.transAxes,
+            )
+
+    def _detect_footer_layout(self, text: Optional[str]) -> str:
+        """Wykrywa układ stopki na podstawie zawartości tekstu. Enter = pionowy, spacja = poziomy."""
+        if not text:
+            return "horizontal"
+        # Jeśli tekst zawiera znak nowej linii (\n), to układ pionowy
+        if '\n' in text:
+            return "vertical"
+        return "horizontal"
+
+    def _render_footer_text(
+        self,
+        ax,
+        text: str,
+        x: float,
+        y: float,
+        layout: str,
+        ha: str,
+        font_family: str,
+        font_color: str,
+        font_size: float,
+        transform=None,
+    ):
+        """Renderuje tekst stopki z obsługą układu poziomego i pionowego (dla ax.text)."""
+        if layout == "vertical":
+            # Dla układu pionowego, używamy jednego wywołania z linespacing dla lepszego formatowania
+            # Zwiększamy rozmiar czcionki dla układu pionowego (o 20%)
+            vertical_font_size = font_size * 1.2
+            # Renderujemy cały tekst z parametrem linespacing dla lepszych odstępów między liniami
+            ax.text(
+                x,
+                y,
+                text,
+                ha=ha,
                 va='bottom',
-                fontsize=14,
+                fontsize=vertical_font_size,
                 fontfamily=font_family,
                 color=font_color,
-                transform=ax.transAxes,
+                transform=transform or ax.transAxes,
+                linespacing=1.6,  # Zwiększa odstęp między liniami dla lepszej czytelności
+            )
+        else:
+            # Dla układu poziomego, renderujemy tekst normalnie
+            ax.text(
+                x,
+                y,
+                text,
+                ha=ha,
+                va='bottom',
+                fontsize=font_size,
+                fontfamily=font_family,
+                color=font_color,
+                transform=transform or ax.transAxes,
+            )
+
+    def _render_footer_text_fig(
+        self,
+        fig,
+        text: str,
+        x: float,
+        y: float,
+        layout: str,
+        ha: str,
+        font_family: str,
+        font_color: str,
+        font_size: float,
+    ):
+        """Renderuje tekst stopki z obsługą układu poziomego i pionowego (dla fig.text)."""
+        if layout == "vertical":
+            # Dla układu pionowego, używamy jednego wywołania z linespacing dla lepszego formatowania
+            # Zwiększamy rozmiar czcionki dla układu pionowego (o 20%)
+            vertical_font_size = font_size * 1.2
+            # Renderujemy cały tekst z parametrem linespacing dla lepszych odstępów między liniami
+            fig.text(
+                x,
+                y,
+                text,
+                ha=ha,
+                va='bottom',
+                fontsize=vertical_font_size,
+                fontfamily=font_family,
+                color=font_color,
+                linespacing=1.6,  # Zwiększa odstęp między liniami dla lepszej czytelności
+            )
+        else:
+            # Dla układu poziomego, renderujemy tekst normalnie
+            fig.text(
+                x,
+                y,
+                text,
+                ha=ha,
+                va='bottom',
+                fontsize=font_size,
+                fontfamily=font_family,
+                color=font_color,
             )
 
     @staticmethod
@@ -1181,28 +1283,32 @@ class PosterMapGenerator(MapGenerator):
                 fontweight='bold',
             )
 
+        footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
+
         if self.footer_left_text:
-            fig.text(
+            self._render_footer_text_fig(
+                fig,
+                self.footer_left_text,
                 0.08,
                 0.06,
-                self.footer_left_text,
-                ha='left',
-                va='bottom',
-                fontsize=self.FOOTER_FONT_PT,
-                fontfamily=font_family,
-                color=font_color,
+                self._detect_footer_layout(self.footer_left_text),
+                'left',
+                font_family,
+                font_color,
+                footer_font_size,
             )
 
         if self.footer_right_text:
-            fig.text(
+            self._render_footer_text_fig(
+                fig,
+                self.footer_right_text,
                 0.92,
                 0.06,
-                self.footer_right_text,
-                ha='right',
-                va='bottom',
-                fontsize=self.FOOTER_FONT_PT,
-                fontfamily=font_family,
-                color=font_color,
+                self._detect_footer_layout(self.footer_right_text),
+                'right',
+                font_family,
+                font_color,
+                footer_font_size,
             )
 
     def generate_map(
@@ -1295,28 +1401,32 @@ class LandscapePosterMapGenerator(MapGenerator):
                 fontweight='bold',
             )
 
+        footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
+
         if self.footer_left_text:
-            fig.text(
+            self._render_footer_text_fig(
+                fig,
+                self.footer_left_text,
                 0.10,
                 0.08,
-                self.footer_left_text,
-                ha='left',
-                va='bottom',
-                fontsize=self.FOOTER_FONT_PT,
-                fontfamily=font_family,
-                color=font_color,
+                self._detect_footer_layout(self.footer_left_text),
+                'left',
+                font_family,
+                font_color,
+                footer_font_size,
             )
 
         if self.footer_right_text:
-            fig.text(
+            self._render_footer_text_fig(
+                fig,
+                self.footer_right_text,
                 0.90,
                 0.08,
-                self.footer_right_text,
-                ha='right',
-                va='bottom',
-                fontsize=self.FOOTER_FONT_PT,
-                fontfamily=font_family,
-                color=font_color,
+                self._detect_footer_layout(self.footer_right_text),
+                'right',
+                font_family,
+                font_color,
+                footer_font_size,
             )
 
     def generate_map(
@@ -1407,28 +1517,32 @@ class LargePosterMapGenerator(MapGenerator):
                 fontweight='bold',
             )
 
+        footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
+
         if self.footer_left_text:
-            fig.text(
+            self._render_footer_text_fig(
+                fig,
+                self.footer_left_text,
                 0.08,
                 0.06,
-                self.footer_left_text,
-                ha='left',
-                va='bottom',
-                fontsize=self.FOOTER_FONT_PT,
-                fontfamily=font_family,
-                color=font_color,
+                self._detect_footer_layout(self.footer_left_text),
+                'left',
+                font_family,
+                font_color,
+                footer_font_size,
             )
 
         if self.footer_right_text:
-            fig.text(
+            self._render_footer_text_fig(
+                fig,
+                self.footer_right_text,
                 0.92,
                 0.06,
-                self.footer_right_text,
-                ha='right',
-                va='bottom',
-                fontsize=self.FOOTER_FONT_PT,
-                fontfamily=font_family,
-                color=font_color,
+                self._detect_footer_layout(self.footer_right_text),
+                'right',
+                font_family,
+                font_color,
+                footer_font_size,
             )
 
     def generate_map(
@@ -1519,28 +1633,32 @@ class LandscapeLargePosterMapGenerator(MapGenerator):
                 fontweight='bold',
             )
 
+        footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
+
         if self.footer_left_text:
-            fig.text(
+            self._render_footer_text_fig(
+                fig,
+                self.footer_left_text,
                 0.10,
                 0.08,
-                self.footer_left_text,
-                ha='left',
-                va='bottom',
-                fontsize=self.FOOTER_FONT_PT,
-                fontfamily=font_family,
-                color=font_color,
+                self._detect_footer_layout(self.footer_left_text),
+                'left',
+                font_family,
+                font_color,
+                footer_font_size,
             )
 
         if self.footer_right_text:
-            fig.text(
+            self._render_footer_text_fig(
+                fig,
+                self.footer_right_text,
                 0.90,
                 0.08,
-                self.footer_right_text,
-                ha='right',
-                va='bottom',
-                fontsize=self.FOOTER_FONT_PT,
-                fontfamily=font_family,
-                color=font_color,
+                self._detect_footer_layout(self.footer_right_text),
+                'right',
+                font_family,
+                font_color,
+                footer_font_size,
             )
 
     def generate_map(

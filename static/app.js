@@ -90,6 +90,7 @@ async function submitForm(event) {
         title: formData.get('title') || undefined,
         footer_left: formData.get('footer_left') || undefined,
         footer_right: formData.get('footer_right') || undefined,
+        footer_font_size: formData.get('footer_font_size') || undefined,
         text_font: textFontValue,
         signature_enabled: signatureEnabledInput ? signatureEnabledInput.checked : undefined,
         signature_path:

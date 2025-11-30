@@ -268,6 +268,13 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
     title_text = payload.get("title") or payload.get("title_text")
     footer_left_text = payload.get("footer_left") or payload.get("footerLeft")
     footer_right_text = payload.get("footer_right") or payload.get("footerRight")
+    footer_font_size_raw = payload.get("footer_font_size")
+    footer_font_size: Optional[float] = None
+    if footer_font_size_raw not in (None, ""):
+        try:
+            footer_font_size = float(footer_font_size_raw)
+        except (TypeError, ValueError):
+            return [], [], {}, ("Rozmiar czcionki stopek musi być liczbą.", 400)
     text_font = payload.get("text_font") or payload.get("textFont")
 
     signature_enabled = _parse_bool(payload.get("signature_enabled"))
@@ -311,6 +318,7 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
         "title_text": title_text,
         "footer_left_text": footer_left_text,
         "footer_right_text": footer_right_text,
+        "footer_font_size": footer_font_size,
         "text_font_family": text_font,
         "signature_enabled": signature_enabled,
         "signature_path": signature_path,
