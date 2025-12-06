@@ -373,6 +373,7 @@ class MapGenerator:
                 fontsize=label_font_pt,
                 fontfamily=font_family_with_fallback,
                 color=self.font_color,
+                fontweight='bold',
                 zorder=8,
                 clip_on=False,  # Don't clip labels - allow them to be visible
                 bbox=None,  # Wyłącz bbox - nie chcemy prostokątów przy etykietach
@@ -758,8 +759,6 @@ class MapGenerator:
         """Renderuje tekst stopki z obsługą układu poziomego i pionowego (dla ax.text)."""
         if layout == "vertical":
             # Dla układu pionowego, używamy jednego wywołania z linespacing dla lepszego formatowania
-            # Zwiększamy rozmiar czcionki dla układu pionowego (o 20%)
-            vertical_font_size = font_size * 1.2
             # Renderujemy cały tekst z parametrem linespacing dla lepszych odstępów między liniami
             ax.text(
                 x,
@@ -767,9 +766,10 @@ class MapGenerator:
                 text,
                 ha=ha,
                 va='bottom',
-                fontsize=vertical_font_size,
+                fontsize=font_size,
                 fontfamily=font_family,
                 color=font_color,
+                fontweight='bold',
                 transform=transform or ax.transAxes,
                 linespacing=1.6,  # Zwiększa odstęp między liniami dla lepszej czytelności
             )
@@ -784,6 +784,7 @@ class MapGenerator:
                 fontsize=font_size,
                 fontfamily=font_family,
                 color=font_color,
+                fontweight='bold',
                 transform=transform or ax.transAxes,
             )
 
@@ -802,8 +803,6 @@ class MapGenerator:
         """Renderuje tekst stopki z obsługą układu poziomego i pionowego (dla fig.text)."""
         if layout == "vertical":
             # Dla układu pionowego, używamy jednego wywołania z linespacing dla lepszego formatowania
-            # Zwiększamy rozmiar czcionki dla układu pionowego (o 20%)
-            vertical_font_size = font_size * 1.2
             # Renderujemy cały tekst z parametrem linespacing dla lepszych odstępów między liniami
             fig.text(
                 x,
@@ -811,9 +810,10 @@ class MapGenerator:
                 text,
                 ha=ha,
                 va='bottom',
-                fontsize=vertical_font_size,
+                fontsize=font_size,
                 fontfamily=font_family,
                 color=font_color,
+                fontweight='bold',
                 linespacing=1.6,  # Zwiększa odstęp między liniami dla lepszej czytelności
             )
         else:
@@ -827,6 +827,7 @@ class MapGenerator:
                 fontsize=font_size,
                 fontfamily=font_family,
                 color=font_color,
+                fontweight='bold',
             )
 
     @staticmethod
