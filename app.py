@@ -270,9 +270,12 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
     footer_right_text = payload.get("footer_right") or payload.get("footerRight")
     footer_font_size_raw = payload.get("footer_font_size")
     footer_font_size: Optional[float] = None
-    if footer_font_size_raw not in (None, ""):
+    if footer_font_size_raw not in (None, "", "auto"):
         try:
-            footer_font_size = float(footer_font_size_raw)
+            footer_font_size_value = float(footer_font_size_raw)
+            # Tylko ustaw wartość, jeśli jest większa od 0
+            if footer_font_size_value > 0:
+                footer_font_size = footer_font_size_value
         except (TypeError, ValueError):
             return [], [], {}, ("Rozmiar czcionki stopek musi być liczbą.", 400)
     text_font = payload.get("text_font") or payload.get("textFont")
