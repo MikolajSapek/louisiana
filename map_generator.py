@@ -690,7 +690,7 @@ class MapGenerator:
                 fontsize=26,
                 fontfamily=font_family,
                 color=font_color,
-                fontweight='bold',
+                fontweight='normal',
                 transform=ax.transAxes,
             )
 
@@ -1281,7 +1281,7 @@ class PosterMapGenerator(MapGenerator):
                 fontsize=self.TITLE_FONT_PT,
                 fontfamily=font_family,
                 color=font_color,
-                fontweight='bold',
+                fontweight='normal',
             )
 
         footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
@@ -1399,7 +1399,7 @@ class LandscapePosterMapGenerator(MapGenerator):
                 fontsize=self.TITLE_FONT_PT,
                 fontfamily=font_family,
                 color=font_color,
-                fontweight='bold',
+                fontweight='normal',
             )
 
         footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
@@ -1515,7 +1515,7 @@ class LargePosterMapGenerator(MapGenerator):
                 fontsize=self.TITLE_FONT_PT,
                 fontfamily=font_family,
                 color=font_color,
-                fontweight='bold',
+                fontweight='normal',
             )
 
         footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
@@ -1631,7 +1631,7 @@ class LandscapeLargePosterMapGenerator(MapGenerator):
                 fontsize=self.TITLE_FONT_PT,
                 fontfamily=font_family,
                 color=font_color,
-                fontweight='bold',
+                fontweight='normal',
             )
 
         footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
