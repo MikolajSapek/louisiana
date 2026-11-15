@@ -21,6 +21,7 @@ from shapely.geometry.polygon import orient
 SOURCE = None  # chosen from FACE below
 FACE = os.environ.get("INDIANS_FACE", "Futura Medium")
 SOURCE = "/System/Library/Fonts/Supplemental/" + ("Futura.ttc" if FACE.startswith("Futura") else "GillSans.ttc")
+OUTLINE = float(os.environ.get("INDIANS_OUTLINE", "0"))  # >0: also draw the letter's outline (Gill Sans Shadowed), fraction of em
 SHADOW = tuple(float(v) for v in os.environ.get("INDIANS_SHADOW", "0.08,-0.03").split(","))  # extrusion (dx, dy), fraction of em
 OUT = Path(__file__).resolve().parent.parent / "fonts" / "private" / os.environ.get("INDIANS_OUT", "Indians.ttf")
 CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-–:/&'’ĄĆĘŁŃÓŚŹŻ"
@@ -94,7 +95,10 @@ def shadow(shape, em):
     if shape.is_empty:
         return shape
     moved = affinity.translate(shape, SHADOW[0] * em, SHADOW[1] * em)
-    return moved.difference(shape.buffer(1)).buffer(-1).buffer(1)
+    result = moved.difference(shape.buffer(1)).buffer(-1).buffer(1)
+    if OUTLINE > 0:  # thin contour of the letter itself makes small sizes readable
+        result = result.union(shape.boundary.buffer(OUTLINE * em / 2, join_style=2))
+    return result
 
 
 def draw(shape):

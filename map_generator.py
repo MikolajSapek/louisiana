@@ -37,6 +37,9 @@ BUNDLED_FONTS = {
     # private, local-only (fonts/private is git- and vercel-ignored): personal posters, never published
     "mounties": ("private/Mounties.ttf", "private/Mounties.ttf"),
     "indians": ("private/Indians.ttf", "private/Indians.ttf"),  # tools/build_indians_font.py
+    "indians bold": ("private/IndiansBold.ttf", "private/IndiansBold.ttf"),  # INDIANS_FACE="Futura Bold"
+    "indians outline": ("private/IndiansOutline.ttf", "private/IndiansOutline.ttf"),  # + INDIANS_OUTLINE=0.018
+    "indians bold outline": ("private/IndiansBoldOutline.ttf", "private/IndiansBoldOutline.ttf"),  # most readable
     "north railway": ("private/NorthRailway-DEMO.ttf", "private/NorthRailway-DEMO.ttf"),  # demo: A-Z only, private use
     "north railway pl": ("private/NorthRailwayPL.ttf", "private/NorthRailwayPL.ttf"),  # + digits, Ł/ł (tools/build_northrailway_pl.py)  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
