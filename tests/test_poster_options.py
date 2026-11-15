@@ -513,3 +513,20 @@ def test_tracked_line_survives_a_glyph_the_font_lacks():
     gen._render_text_overlays(ax)  # must not raise on the missing snowman glyph
     assert {"A", "B"} <= {t.get_text() for t in fig.texts}
     plt.close(fig)
+
+
+def test_centered_stacked_footer_forms_a_pyramid():
+    gen = mg.PosterMapGenerator(footer_left_text="AB\nABCDEF", footer_y=0.03, footer_line_gap=0.03, footer_stroke=1.0,
+                                footer_font_family="Helvetica", footer_font_size=40, footer_align="center")
+    fig, ax = plt.subplots()
+    gen._render_text_overlays(ax)
+    a = sorted((t.get_position() for t in fig.texts if t.get_text() == "A"), key=lambda p: p[1])
+    bottom_a, top_a = a[0][0], a[1][0]
+    assert bottom_a == 0.04  # the widest (bottom) line starts at the margin
+    assert top_a > bottom_a + 0.01  # the shorter top line is centred above it
+    plt.close(fig)
+
+
+def test_footer_align_from_form(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_align": "center"})
+    assert options["footer_align"] == "center"

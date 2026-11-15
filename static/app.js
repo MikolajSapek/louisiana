@@ -115,6 +115,7 @@ async function submitForm(event) {
         footer_y: formData.get('footer_y') || undefined,
         footer_line_gap: formData.get('footer_line_gap') || undefined,
         footer_stroke: formData.get('footer_stroke') || undefined,
+        footer_align: formData.get('footer_align') || undefined,
         dashed_from: formData.get('dashed_from') || undefined,
         show_water: formData.get('show_water') === 'on',
         water_color: formData.get('water_color') || undefined,

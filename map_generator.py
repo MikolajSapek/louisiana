@@ -237,6 +237,7 @@ class MapGenerator:
         footer_y: Optional[float] = None,
         footer_line_gap: Optional[float] = None,
         footer_stroke: Optional[float] = None,
+        footer_align: str = "left",
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -301,6 +302,7 @@ class MapGenerator:
         self.footer_y = footer_y  # footer baseline, fraction of poster height (None = format default)
         self.footer_line_gap = footer_line_gap  # baseline-to-baseline for stacked footer lines (fraction)
         self.footer_stroke = footer_stroke  # extra weight for stacked footer lines, points
+        self.footer_align = footer_align if footer_align in ("left", "center") else "left"
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -939,6 +941,21 @@ class MapGenerator:
             linewidth=height_pt * 0.045, solid_capstyle="round", solid_joinstyle="round", gid="footer-signature",
         ))
 
+    def _tracked_width(self, line: str, props, font_size: float) -> float:
+        """Width of a tracked line as a fraction of the poster width (same advances as _draw_tracked_line)."""
+        from matplotlib import ft2font
+
+        face = ft2font.FT2Font(props.get_file())
+        face.set_size(font_size, 72)
+        total = 0.0
+        for ch in line:
+            try:
+                total += face.load_char(ord(ch)).linearHoriAdvance / 65536
+            except RuntimeError:
+                total += font_size * 0.3
+        total += self.footer_stroke * max(len(line) - 1, 0)
+        return total / (self._fig_width_in * 72.0)
+
     def _draw_tracked_line(self, fig, x: float, y: float, line: str, props, font_size: float, colour: str, effects) -> None:
         """One letter at a time with extra spacing equal to footer_stroke, so outlined letters keep the
         gaps they have unstroked (matplotlib has no letter-spacing)."""
@@ -946,6 +963,7 @@ class MapGenerator:
 
         face = ft2font.FT2Font(props.get_file())
         face.set_size(font_size, 72)  # 72 dpi: advances come out in points
+        self._fig_width_in = fig.get_figwidth()
         to_fig = 1.0 / (fig.get_figwidth() * 72.0)
         for ch in line:
             fig.text(x, y, ch, ha='left', va='baseline', fontsize=font_size, fontproperties=props,
@@ -1041,6 +1059,7 @@ class MapGenerator:
     ):
         """Renderuje tekst stopki z obsługą układu poziomego i pionowego (dla fig.text)."""
         font_family = self.footer_font_family or font_family
+        self._fig_width_in = fig.get_figwidth()
         if self.footer_y is not None:
             y = self.footer_y
             if "\n" in text or self.footer_stroke:  # stacked lines, each on its own baseline (bottom line at footer_y)
@@ -1049,10 +1068,15 @@ class MapGenerator:
                 # optional same-colour outline makes thin display faces read heavier (footer_stroke, points)
                 effects = [patheffects.withStroke(linewidth=self.footer_stroke, foreground=font_color)] if self.footer_stroke else None
                 props = font_properties(font_family, bold=True)
+                tracked = bool(self.footer_stroke) and bool(props.get_file()) and ha == 'left'
+                widths = [self._tracked_width(line, props, font_size) for line in lines] if tracked else []
+                block = max(widths) if widths else 0.0
                 for k, line in enumerate(reversed(lines)):
                     line_y = round(y + k * gap, 6)
-                    if self.footer_stroke and props.get_file() and ha == 'left':
-                        self._draw_tracked_line(fig, x, line_y, line, props, font_size, font_color, effects)
+                    if tracked:
+                        # footer_align="center": lines centred on the widest one (a pyramid from the margin)
+                        shift = (block - widths[len(lines) - 1 - k]) / 2 if self.footer_align == "center" else 0.0
+                        self._draw_tracked_line(fig, x + shift, line_y, line, props, font_size, font_color, effects)
                     else:
                         fig.text(x, line_y, line, ha=ha, va='baseline', fontsize=font_size,
                                  fontproperties=props, color=font_color, path_effects=effects)

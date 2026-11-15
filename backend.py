@@ -382,6 +382,7 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
         "footer_signature": payload.get("footer_signature") or None,
     }
     options["footer_font_family"] = payload.get("footer_font") or None
+    options["footer_align"] = "center" if payload.get("footer_align") == "center" else "left"
     try:
         options["dashed_from"] = int(payload["dashed_from"]) if payload.get("dashed_from") not in (None, "") else None
     except (TypeError, ValueError):
