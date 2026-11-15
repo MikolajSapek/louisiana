@@ -35,7 +35,7 @@ except (OSError, PermissionError) as e:
     import logging
     logging.warning(f"Could not create MAP_STORAGE_DIR {MAP_STORAGE_DIR}: {e}")
 
-LOGO_DIR = STATIC_DIR / "logos"
+LOGO_DIR = BASE_DIR / "logos"  # not static/: Vercel serves static/ from the CDN, outside the function
 LOGO_PRESETS = {p.stem for p in LOGO_DIR.glob("*.png")}  # allowlist: only files shipped in static/logos
 
 app = Flask(__name__, static_folder=str(STATIC_DIR), template_folder=str(BASE_DIR / "templates"))

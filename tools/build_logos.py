@@ -1,11 +1,11 @@
-"""Builds static/logos/*.png (corner logo presets) from tools/via_source.jpg at 6x resolution."""
+"""Builds logos/*.png (corner logo presets) from tools/via_source.jpg at 6x resolution."""
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageFilter
 
 HERE = Path(__file__).parent
-OUT = HERE.parent / "static" / "logos"
+OUT = HERE.parent / "logos"
 SCALE = 6
 YELLOW, RED, CREAM, DARK = "#FFC72C", "#D52B1E", "#F1E6C8", "#1E2A20"
 PRESETS = {  # id: (stripes colour, wordmark colour or None, leaf?)

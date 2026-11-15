@@ -102,7 +102,7 @@ def test_corner_logo_preset_enables_signature():
     _, _, options, error = backend._prepare_generation({"cities": ["Winnipeg"], "corner_logo": "via_yellow_full"})
     assert error is None
     assert options["signature_enabled"] is True
-    assert Path(options["signature_path"]) == ROOT / "static" / "logos" / "via_yellow_full.png"
+    assert Path(options["signature_path"]) == ROOT / "logos" / "via_yellow_full.png"
 
 
 def test_corner_logo_unknown_preset_is_ignored():
@@ -215,3 +215,10 @@ def test_footer_signature_reaches_generator_and_form(fake_geocoder):
     _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_signature": "mikolaj"})
     assert options["footer_signature"] == "mikolaj"
     assert 'name="footer_signature"' in (ROOT / "templates" / "index.html").read_text()
+
+
+def test_server_assets_live_outside_static():
+    # Vercel serves static/ from its CDN; files the server reads must ship with the function (regression: logo vanished)
+    assert "static" not in backend.LOGO_DIR.relative_to(ROOT).parts
+    assert "static" not in mg.FONT_DIR.relative_to(ROOT).parts
+    assert backend.LOGO_PRESETS == {"via_yellow", "via_yellow_full", "via_cream", "via_dark", "via_dark_full"}
