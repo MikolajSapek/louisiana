@@ -35,6 +35,9 @@ except (OSError, PermissionError) as e:
     import logging
     logging.warning(f"Could not create MAP_STORAGE_DIR {MAP_STORAGE_DIR}: {e}")
 
+LOGO_DIR = STATIC_DIR / "logos"
+LOGO_PRESETS = {p.stem for p in LOGO_DIR.glob("*.png")}  # allowlist: only files shipped in static/logos
+
 app = Flask(__name__, static_folder=str(STATIC_DIR), template_folder=str(BASE_DIR / "templates"))
 
 # Initialize geocoder lazily to avoid issues during module import on Vercel
@@ -111,62 +114,6 @@ def index() -> str:
 def serve_map(filename: str):
     """Serwuje wygenerowane mapy zarówno lokalnie, jak i na Vercel."""
     return send_from_directory(str(MAP_STORAGE_DIR), filename, mimetype="image/png")
-
-
-PREVIEW_GLOB = "map_final_mcp_*.png"  # posters made from the terminal (mcp_server.py)
-
-PREVIEW_PAGE = """<!doctype html>
-<html lang="pl"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Podgląd plakatu</title>
-<style>
-:root { --bg: #f4f4f2; --fg: #1a1a1a; --muted: #5c5c5c; }
-@media (prefers-color-scheme: dark) { :root { --bg: #141414; --fg: #f2f2f2; --muted: #a8a8a8; } }
-body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
-main { max-width: 900px; margin: 0 auto; padding: 16px; }
-h1 { font-size: 20px; margin: 8px 0; }
-p { color: var(--muted); margin: 0 0 16px; }
-img { display: block; max-width: 100%; max-height: 85vh; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
-a { color: inherit; }
-</style></head>
-<body><main>
-<h1>Podgląd plakatu</h1>
-<p id="status" aria-live="polite">Czekam na plakat z terminala…</p>
-<img id="poster" alt="Ostatni wygenerowany plakat trasy" hidden>
-</main>
-<script>
-let current = null;
-async function refresh() {
-  try {
-    const data = await (await fetch("/api/preview/latest", {cache: "no-store"})).json();
-    if (!data.file || data.file === current) return;
-    current = data.file;
-    const img = document.getElementById("poster");
-    img.src = data.url; img.hidden = false;
-    document.getElementById("status").innerHTML =
-      `Ostatni plakat: ${new Date(data.mtime * 1000).toLocaleString("pl-PL")} · <a href="${data.url}" download>pobierz PNG</a>`;
-  } catch (e) { document.getElementById("status").textContent = "Brak połączenia z serwerem."; }
-}
-refresh(); setInterval(refresh, 2000);
-</script></body></html>"""
-
-
-@app.get("/preview")
-def preview_page() -> str:
-    return PREVIEW_PAGE
-
-
-@app.get("/api/preview/latest")
-def preview_latest() -> Any:
-    files = sorted(MAP_STORAGE_DIR.glob(PREVIEW_GLOB), key=lambda p: p.stat().st_mtime)
-    if not files:
-        return jsonify({"file": None})
-    latest = files[-1]
-    return jsonify({
-        "file": latest.name,
-        "url": url_for("serve_map", filename=latest.name),
-        "mtime": latest.stat().st_mtime,
-    })
 
 
 @app.post("/api/generate")
@@ -347,6 +294,22 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
 
     merge_bidirectional_routes = _parse_bool(payload.get("merge_bidirectional_routes"))
 
+    subtitle_text = payload.get("subtitle") or None
+    subtitle_font = payload.get("subtitle_font") or None
+    line_outline_color = payload.get("line_outline_color") or None
+    point_edge_color = payload.get("point_edge_color") or None
+    repeated_legs = payload.get("repeated_legs") if payload.get("repeated_legs") in ("arcs", "double") else "arcs"
+    curve_strength: Optional[float] = None
+    try:
+        if payload.get("curve_strength") not in (None, ""):
+            curve_strength = max(0.0, min(float(payload["curve_strength"]), 1.0))
+    except (TypeError, ValueError):
+        curve_strength = None
+    corner_logo = str(payload.get("corner_logo") or "")
+    if corner_logo in LOGO_PRESETS:  # built-in corner logo uses the signature mechanism
+        signature_enabled = True
+        signature_path = str(LOGO_DIR / f"{corner_logo}.png")
+
     route, warnings = _build_route(cities)
     if not route:
         return [], [], {}, ("Brak miast z poprawnymi współrzędnymi.", 400)
@@ -373,7 +336,14 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
         "signature_position": signature_position,
         "signature_scale": signature_scale,
         "merge_bidirectional_routes": merge_bidirectional_routes,
+        "subtitle_text": subtitle_text,
+        "subtitle_font_family": subtitle_font,
+        "line_outline_color": line_outline_color,
+        "point_edge_color": point_edge_color,
+        "repeated_legs": repeated_legs,
     }
+    if curve_strength is not None:  # absent = each paper format keeps its own default bend
+        options["curve_strength"] = curve_strength
 
     return route, warnings, options, None
 

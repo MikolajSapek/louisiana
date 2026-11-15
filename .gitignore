@@ -32,3 +32,9 @@ Thumbs.db
 
 .venv.broken/
 preview_server.log
+
+# shipped assets
+!static/logos/*.png
+!tools/via_source.jpg
+.vercel
+.env*.local

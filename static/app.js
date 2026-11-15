@@ -102,6 +102,13 @@ async function submitForm(event) {
         signature_position: signaturePositionSelect ? signaturePositionSelect.value : undefined,
         signature_scale: signatureScaleInput && signatureScaleInput.value ? signatureScaleInput.value : undefined,
         merge_bidirectional_routes: formData.get('merge_bidirectional_routes') === 'on',
+        subtitle: formData.get('subtitle') || undefined,
+        subtitle_font: formData.get('subtitle_font') || undefined,
+        line_outline_color: formData.get('line_outline_color') || undefined,
+        point_edge_color: formData.get('point_edge_color') || undefined,
+        repeated_legs: formData.get('repeated_legs') || undefined,
+        corner_logo: formData.get('corner_logo') || undefined,
+        curve_strength: formData.get('curve_strength') || undefined,
     };
 
     lastPayload = clonePayload(payload);
@@ -758,9 +765,17 @@ function applyProjectToForm(project) {
     });
 }
 
-(function loadProjectFromLink() {
+function loadProjectFromLink() {
     const project = decodeProjectHash(window.location.hash);
     if (!project) return;
+    form.reset(); // a new link replaces the previous project instead of mixing with it
     applyProjectToForm(project);
-    form.requestSubmit();
-})();
+    // requestSubmit() silently does nothing when a field is invalid; show the browser's message instead
+    if (form.reportValidity()) {
+        form.requestSubmit();
+    }
+}
+
+loadProjectFromLink();
+// Opening another project link in the same tab only changes the #hash, which does not reload the page
+window.addEventListener('hashchange', loadProjectFromLink);

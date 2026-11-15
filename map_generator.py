@@ -26,6 +26,42 @@ except Exception:
 
 
 BASE_DIR = Path(__file__).resolve().parent
+FONT_DIR = BASE_DIR / "fonts"
+# Fonts shipped with the repo (font choice -> regular file, bold file). Lookup is case-insensitive.
+BUNDLED_FONTS = {
+    "helvetica": ("Helvetica.ttf", "HelveticaBold.ttf"),
+    "superclarendon": ("SuperclarendonBold.ttf", "SuperclarendonBlack.ttf"),
+    "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
+}
+DOUBLE_LINE_GAP = 0.009  # gap between parallel lines of a repeated leg, as a fraction of the map span
+
+
+def font_properties(name: Optional[str], bold: bool = False) -> fm.FontProperties:
+    """Font for a form choice: the bundled file when we ship it (same on Mac and Vercel), else the family name."""
+    files = BUNDLED_FONTS.get((name or "").strip().lower())
+    if files:
+        return fm.FontProperties(fname=str(FONT_DIR / files[1 if bold else 0]))
+    return fm.FontProperties(family=[name or "DejaVu Sans", "DejaVu Sans"], weight="bold" if bold else "normal")
+
+
+DISPLAY_FONTS = {"superclarendon"}  # titles use the heavy face only for display fonts
+
+
+def title_font_properties(name: Optional[str]) -> fm.FontProperties:
+    """Title font: regular weight as before, heavy face for display fonts like Superclarendon."""
+    return font_properties(name, bold=(name or "").strip().lower() in DISPLAY_FONTS)
+
+
+def offset_polyline(points: np.ndarray, distance: float) -> np.ndarray:
+    """Parallel copy of a polyline, shifted sideways by distance (data units)."""
+    seg = np.diff(points, axis=0)
+    lengths = np.linalg.norm(seg, axis=1)
+    lengths[lengths == 0] = 1.0
+    normals = np.c_[-seg[:, 1], seg[:, 0]] / lengths[:, None]
+    vertex_normals = np.r_[normals[:1], (normals[:-1] + normals[1:]) / 2, normals[-1:]]
+    norms = np.linalg.norm(vertex_normals, axis=1)
+    norms[norms == 0] = 1.0
+    return points + vertex_normals / norms[:, None] * distance
 
 
 class MapGenerator:
@@ -112,6 +148,11 @@ class MapGenerator:
         signature_scale: Optional[float] = None,
         merge_bidirectional_routes: bool = False,
         lock_paper_orientation: bool = False,
+        subtitle_text: Optional[str] = None,
+        subtitle_font_family: Optional[str] = None,
+        line_outline_color: Optional[str] = None,
+        point_edge_color: Optional[str] = None,
+        repeated_legs: str = "arcs",
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -152,6 +193,12 @@ class MapGenerator:
         self.signature_margin_fraction = 0.06
         self.merge_bidirectional_routes = bool(merge_bidirectional_routes)
         self.lock_paper_orientation = bool(lock_paper_orientation)
+        self.subtitle_text = subtitle_text
+        self.subtitle_font_family = subtitle_font_family or "Euphemia UCAS"
+        self.line_outline_color = line_outline_color or None
+        self.point_edge_color = point_edge_color or None
+        # arcs: repeated legs as fanned arcs (default); double: parallel lines for a leg ridden more than once
+        self.repeated_legs = (repeated_legs or "arcs").lower()
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -247,6 +294,10 @@ class MapGenerator:
             else:
                 occurrence_tracker = defaultdict(int)
                 pair_counts = Counter((key[0], key[1]) for key in segment_keys)
+            double_legs = self.repeated_legs == "double" and not self.merge_bidirectional_routes
+            leg_counts = Counter(tuple(sorted((key[0], key[1]))) for key in segment_keys)
+            leg_seen: Dict[Tuple[str, str], int] = defaultdict(int)
+            double_gap = DOUBLE_LINE_GAP * max(lon_span, lat_span, 1e-6)
 
             for idx, (start_name, end_name, i) in enumerate(segment_keys):
                 if self.merge_bidirectional_routes:
@@ -261,12 +312,24 @@ class MapGenerator:
                     occurrence_tracker[(start_name, end_name)] += 1
                     total_occurrences = pair_counts[(start_name, end_name)]
 
-                curve = self._build_curve(
-                    (lons[i], lats[i]),
-                    (lons[i + 1], lats[i + 1]),
-                    occurrence_idx=occurrence_idx,
-                    total_occurrences=total_occurrences,
-                )
+                leg = tuple(sorted((start_name, end_name)))
+                if double_legs and leg_counts[leg] > 1:
+                    # Same curve for every trip on this leg (built in one fixed direction), shifted side by side
+                    a, b = (i, i + 1) if start_name == leg[0] else (i + 1, i)
+                    k = leg_seen[leg]
+                    leg_seen[leg] += 1
+                    curve = offset_polyline(
+                        self._build_curve((lons[a], lats[a]), (lons[b], lats[b])),
+                        (k - (leg_counts[leg] - 1) / 2) * double_gap,
+                    )
+                    total_occurrences = 1
+                else:
+                    curve = self._build_curve(
+                        (lons[i], lats[i]),
+                        (lons[i + 1], lats[i + 1]),
+                        occurrence_idx=occurrence_idx,
+                        total_occurrences=total_occurrences,
+                    )
                 base_linewidth = (
                     self.line_width
                     if self.line_width is not None
@@ -277,6 +340,7 @@ class MapGenerator:
                     "color": self.line_color,
                     "alpha": 0.85,
                     "label": "Trasa" if idx == 0 else None,
+                    "zorder": 3,
                 }
 
                 if marker_line:
@@ -302,6 +366,14 @@ class MapGenerator:
                         }
                     )
 
+                if self.line_outline_color and not marker_line:
+                    # Rail-map look: a wider dark edge under the coloured line
+                    line_kwargs.update({"alpha": 1.0, "solid_capstyle": "round", "solid_joinstyle": "round"})
+                    ax.plot(
+                        curve[:, 0], curve[:, 1],
+                        color=self.line_outline_color, linewidth=base_linewidth * 2.2, linestyle=linestyle,
+                        solid_capstyle="round", solid_joinstyle="round", zorder=2,
+                    )
                 ax.plot(
                     curve[:, 0],
                     curve[:, 1],
@@ -313,7 +385,8 @@ class MapGenerator:
             lons,
             lats,
             c=self.point_color,
-            edgecolors='none',
+            edgecolors=self.point_edge_color or 'none',
+            linewidths=2.0 if self.point_edge_color else 0.0,
             s=self.point_size or 50,
             marker=self._resolve_point_marker(self.point_style),
             zorder=5,
@@ -362,7 +435,12 @@ class MapGenerator:
             # Użyj czcionki z fallbackiem na DejaVu Sans dla polskich znaków
             # DejaVu Sans ma pełne wsparcie dla Unicode i polskich znaków diakrytycznych
             # Zawsze używaj DejaVu Sans dla etykiet miast, aby uniknąć problemów z polskimi znakami
-            font_family_with_fallback = "DejaVu Sans"
+            # Bundled fonts (Helvetica, ...) render the same everywhere; anything else keeps DejaVu Sans for Polish glyphs
+            label_font = (
+                font_properties(self.font_family, bold=True)
+                if (self.font_family or "").strip().lower() in BUNDLED_FONTS
+                else fm.FontProperties(family="DejaVu Sans", weight="bold")
+            )
             
             text = ax.text(
                 target_x,
@@ -370,10 +448,9 @@ class MapGenerator:
                 city["name"],
                 ha="center",
                 va="bottom",
+                fontproperties=label_font,
                 fontsize=label_font_pt,
-                fontfamily=font_family_with_fallback,
                 color=self.font_color,
-                fontweight='bold',
                 zorder=8,
                 clip_on=False,  # Don't clip labels - allow them to be visible
                 bbox=None,  # Wyłącz bbox - nie chcemy prostokątów przy etykietach
@@ -688,9 +765,8 @@ class MapGenerator:
                 ha='center',
                 va='top',
                 fontsize=26,
-                fontfamily=font_family,
+                fontproperties=title_font_properties(font_family),
                 color=font_color,
-                fontweight='normal',
                 transform=ax.transAxes,
             )
 
@@ -734,6 +810,24 @@ class MapGenerator:
                 ax.transAxes,
             )
 
+    def _render_subtitle(self, fig, title_top: Optional[float]) -> None:
+        """Second title line (e.g. the place name in another script) right under the poster title."""
+        if not self.subtitle_text:
+            return
+        title_pt = getattr(self, "TITLE_FONT_PT", 26.0)
+        fig_height_pt = fig.get_figheight() * 72.0
+        top = (title_top if title_top is not None else 0.965) - (title_pt * 1.25 / fig_height_pt if title_top is not None else 0.0)
+        fig.text(
+            0.5,
+            top,
+            self.subtitle_text,
+            ha='center',
+            va='top',
+            fontsize=title_pt * 0.5,
+            fontproperties=font_properties(self.subtitle_font_family, bold=True),
+            color=self.font_color,
+        )
+
     def _detect_footer_layout(self, text: Optional[str]) -> str:
         """Wykrywa układ stopki na podstawie zawartości tekstu. Enter = pionowy, spacja = poziomy."""
         if not text:
@@ -767,9 +861,8 @@ class MapGenerator:
                 ha=ha,
                 va='bottom',
                 fontsize=font_size,
-                fontfamily=font_family,
+                fontproperties=font_properties(font_family, bold=True),
                 color=font_color,
-                fontweight='bold',
                 transform=transform or ax.transAxes,
                 linespacing=1.6,  # Zwiększa odstęp między liniami dla lepszej czytelności
             )
@@ -782,9 +875,8 @@ class MapGenerator:
                 ha=ha,
                 va='bottom',
                 fontsize=font_size,
-                fontfamily=font_family,
+                fontproperties=font_properties(font_family, bold=True),
                 color=font_color,
-                fontweight='bold',
                 transform=transform or ax.transAxes,
             )
 
@@ -811,9 +903,8 @@ class MapGenerator:
                 ha=ha,
                 va='bottom',
                 fontsize=font_size,
-                fontfamily=font_family,
+                fontproperties=font_properties(font_family, bold=True),
                 color=font_color,
-                fontweight='bold',
                 linespacing=1.6,  # Zwiększa odstęp między liniami dla lepszej czytelności
             )
         else:
@@ -825,9 +916,8 @@ class MapGenerator:
                 ha=ha,
                 va='bottom',
                 fontsize=font_size,
-                fontfamily=font_family,
+                fontproperties=font_properties(font_family, bold=True),
                 color=font_color,
-                fontweight='bold',
             )
 
     @staticmethod
@@ -1279,10 +1369,10 @@ class PosterMapGenerator(MapGenerator):
                 ha='center',
                 va='top',
                 fontsize=self.TITLE_FONT_PT,
-                fontfamily=font_family,
+                fontproperties=title_font_properties(font_family),
                 color=font_color,
-                fontweight='normal',
             )
+        self._render_subtitle(fig, 0.965 if self.title_text else None)
 
         footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
 
@@ -1397,10 +1487,10 @@ class LandscapePosterMapGenerator(MapGenerator):
                 ha='center',
                 va='top',
                 fontsize=self.TITLE_FONT_PT,
-                fontfamily=font_family,
+                fontproperties=title_font_properties(font_family),
                 color=font_color,
-                fontweight='normal',
             )
+        self._render_subtitle(fig, 0.93 if self.title_text else None)
 
         footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
 
@@ -1513,10 +1603,10 @@ class LargePosterMapGenerator(MapGenerator):
                 ha='center',
                 va='top',
                 fontsize=self.TITLE_FONT_PT,
-                fontfamily=font_family,
+                fontproperties=title_font_properties(font_family),
                 color=font_color,
-                fontweight='normal',
             )
+        self._render_subtitle(fig, 0.965 if self.title_text else None)
 
         footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
 
@@ -1629,10 +1719,10 @@ class LandscapeLargePosterMapGenerator(MapGenerator):
                 ha='center',
                 va='top',
                 fontsize=self.TITLE_FONT_PT,
-                fontfamily=font_family,
+                fontproperties=title_font_properties(font_family),
                 color=font_color,
-                fontweight='normal',
             )
+        self._render_subtitle(fig, 0.93 if self.title_text else None)
 
         footer_font_size = self.footer_font_size if self.footer_font_size is not None else self.FOOTER_FONT_PT
 

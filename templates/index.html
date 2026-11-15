@@ -38,6 +38,8 @@ Monaco"></textarea>
                             <select id="font" name="font">
                                 <option value="">Automatycznie (Helvetica)</option>
                                 <option value="Helvetica">Helvetica</option>
+                                <option value="Superclarendon">Superclarendon</option>
+                                <option value="Euphemia UCAS">Euphemia UCAS</option>
                                 <option value="Arial">Arial</option>
                                 <option value="Futura">Futura</option>
                                 <option value="Avenir">Avenir</option>
@@ -77,6 +79,20 @@ Monaco"></textarea>
                             <label for="line_color">Kolor linii</label>
                             <input type="color" id="line_color" name="line_color" value="#f2f4ff">
 
+                            <label for="line_outline_color">Obwódka linii (jak na mapie kolejowej)</label>
+                            <input type="text" id="line_outline_color" name="line_outline_color" placeholder="np. #101511" pattern="#[0-9A-Fa-f]{6}">
+                            <p class="helper-text">Kolor ciemnej krawędzi pod linią. Puste = bez obwódki.</p>
+
+                            <label for="curve_strength">Wygięcie linii</label>
+                            <input type="number" id="curve_strength" name="curve_strength" min="0" max="1" step="0.01" placeholder="auto (0 = proste)">
+                            <p class="helper-text">0 = proste odcinki jak na mapie kolejowej. Puste = domyślne łuki.</p>
+
+                            <label for="repeated_legs">Odcinek przejechany dwa razy</label>
+                            <select id="repeated_legs" name="repeated_legs">
+                                <option value="arcs">Dwa łuki</option>
+                                <option value="double">Podwójna linia (równoległa)</option>
+                            </select>
+
                             <label for="line_width">Szerokość linii</label>
                             <input type="number" id="line_width" name="line_width" min="0.5" max="10" step="0.1" placeholder="auto">
                             <p class="helper-text">Pozostaw puste, aby dopasować szerokość automatycznie.</p>
@@ -94,6 +110,10 @@ Monaco"></textarea>
                             <label for="point_color">Kolor punktów</label>
                             <input type="color" id="point_color" name="point_color" value="#f2f4ff">
 
+                            <label for="point_edge_color">Obwódka punktów</label>
+                            <input type="text" id="point_edge_color" name="point_edge_color" placeholder="np. #101511" pattern="#[0-9A-Fa-f]{6}">
+                            <p class="helper-text">Puste = bez obwódki.</p>
+
                             <label for="point_size">Rozmiar punktów</label>
                             <input type="number" id="point_size" name="point_size" min="10" max="200" step="5" placeholder="auto">
                             <p class="helper-text">Domyślnie punkty mają średni rozmiar (~50 w Matplotlib).</p>
@@ -105,6 +125,16 @@ Monaco"></textarea>
                         <div class="panel-body">
                             <label for="title">Tytuł na górze</label>
                             <input type="text" id="title" name="title" placeholder="Nasza podróż po Europie">
+
+                            <label for="subtitle">Podtytuł pod tytułem</label>
+                            <input type="text" id="subtitle" name="subtitle" placeholder="np. nazwa w innym alfabecie: ᑯᒡᔪᐊᖅ">
+
+                            <label for="subtitle_font">Czcionka podtytułu</label>
+                            <select id="subtitle_font" name="subtitle_font">
+                                <option value="Euphemia UCAS">Euphemia UCAS (sylabariusz inuicki)</option>
+                                <option value="Helvetica">Helvetica</option>
+                                <option value="Superclarendon">Superclarendon</option>
+                            </select>
 
                             <label for="footer_left">Lewy dolny podpis</label>
                             <textarea id="footer_left" name="footer_left" rows="2" placeholder="Data / Autor"></textarea>
@@ -122,6 +152,8 @@ Monaco"></textarea>
                             <select id="text_font" name="text_font">
                                 <option value="">Jak podpisy miast</option>
                                 <option value="Helvetica">Helvetica</option>
+                                <option value="Superclarendon">Superclarendon</option>
+                                <option value="Euphemia UCAS">Euphemia UCAS</option>
                                 <option value="Arial">Arial</option>
                                 <option value="Futura">Futura</option>
                                 <option value="Avenir">Avenir</option>
@@ -149,8 +181,19 @@ Monaco"></textarea>
                             </select>
 
                             <label for="dpi">DPI</label>
-                            <input type="number" id="dpi" name="dpi" min="72" max="600" step="10" placeholder="np. 300">
+                            <input type="number" id="dpi" name="dpi" min="72" max="600" step="1" placeholder="np. 300">
                             <p class="helper-text">Pozostaw puste, aby użyć domyślnej wartości (300 DPI).</p>
+
+                            <label for="corner_logo">Logo w rogu</label>
+                            <select id="corner_logo" name="corner_logo">
+                                <option value="">Bez logo</option>
+                                <option value="via_yellow">VIA, żółte</option>
+                                <option value="via_yellow_full">VIA, żółte z liściem i napisem</option>
+                                <option value="via_cream">VIA, kremowe</option>
+                                <option value="via_dark">VIA, ciemne</option>
+                                <option value="via_dark_full">VIA, ciemne z napisem</option>
+                            </select>
+                            <p class="helper-text">Pozycję i skalę ustawisz niżej (jak podpis).</p>
 
                             <div class="signature-settings">
                                 <label class="checkbox-inline" for="signature_enabled">
