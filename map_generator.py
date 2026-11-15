@@ -939,6 +939,23 @@ class MapGenerator:
             linewidth=height_pt * 0.045, solid_capstyle="round", solid_joinstyle="round", gid="footer-signature",
         ))
 
+    def _draw_tracked_line(self, fig, x: float, y: float, line: str, props, font_size: float, colour: str, effects) -> None:
+        """One letter at a time with extra spacing equal to footer_stroke, so outlined letters keep the
+        gaps they have unstroked (matplotlib has no letter-spacing)."""
+        from matplotlib import ft2font
+
+        face = ft2font.FT2Font(props.get_file())
+        face.set_size(font_size, 72)  # 72 dpi: advances come out in points
+        to_fig = 1.0 / (fig.get_figwidth() * 72.0)
+        for ch in line:
+            fig.text(x, y, ch, ha='left', va='baseline', fontsize=font_size, fontproperties=props,
+                     color=colour, path_effects=effects)
+            try:
+                advance = face.load_char(ord(ch)).linearHoriAdvance / 65536
+            except RuntimeError:  # glyph missing from the font: advance like a space instead of failing
+                advance = font_size * 0.3
+            x += (advance + self.footer_stroke) * to_fig
+
     def _render_subtitle(self, fig, title_top: Optional[float]) -> None:
         """Second title line (e.g. the place name in another script) right under the poster title."""
         if not self.subtitle_text:
@@ -1026,15 +1043,19 @@ class MapGenerator:
         font_family = self.footer_font_family or font_family
         if self.footer_y is not None:
             y = self.footer_y
-            if "\n" in text:  # stacked lines, each on its own baseline (bottom line at footer_y)
+            if "\n" in text or self.footer_stroke:  # stacked lines, each on its own baseline (bottom line at footer_y)
                 lines = text.split("\n")
                 gap = self.footer_line_gap or font_size * 1.3 / (fig.get_figheight() * 72.0)
                 # optional same-colour outline makes thin display faces read heavier (footer_stroke, points)
                 effects = [patheffects.withStroke(linewidth=self.footer_stroke, foreground=font_color)] if self.footer_stroke else None
+                props = font_properties(font_family, bold=True)
                 for k, line in enumerate(reversed(lines)):
-                    fig.text(x, round(y + k * gap, 6), line, ha=ha, va='baseline', fontsize=font_size,
-                             fontproperties=font_properties(font_family, bold=True), color=font_color,
-                             path_effects=effects)
+                    line_y = round(y + k * gap, 6)
+                    if self.footer_stroke and props.get_file() and ha == 'left':
+                        self._draw_tracked_line(fig, x, line_y, line, props, font_size, font_color, effects)
+                    else:
+                        fig.text(x, line_y, line, ha=ha, va='baseline', fontsize=font_size,
+                                 fontproperties=props, color=font_color, path_effects=effects)
                 return
         if layout == "vertical":
             # Dla układu pionowego, używamy jednego wywołania z linespacing dla lepszego formatowania

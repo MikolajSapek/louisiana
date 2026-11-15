@@ -481,7 +481,7 @@ def test_footer_stroke_thickens_footer_letters():
                                 footer_stroke=2.5, font_color="#f2c318")
     fig, ax = plt.subplots()
     gen._render_text_overlays(ax)
-    t = [t for t in fig.texts if t.get_text() == "SOFIA"][0]
+    t = [t for t in fig.texts if t.get_text() == "S"][0]  # stroked lines are set letter by letter
     effects = t.get_path_effects()
     assert effects and effects[0]._gc["linewidth"] == 2.5 and matplotlib.colors.to_hex(effects[0]._gc["foreground"]) == "#f2c318"
     plt.close(fig)
@@ -490,3 +490,26 @@ def test_footer_stroke_thickens_footer_letters():
 def test_footer_stroke_from_form(fake_geocoder):
     _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_stroke": "2.5"})
     assert options["footer_stroke"] == 2.5
+
+
+def test_stroked_footer_letters_get_extra_tracking():
+    gen = mg.PosterMapGenerator(footer_left_text="AB\nCD", footer_y=0.03, footer_line_gap=0.03, footer_stroke=2.0,
+                                footer_font_family="Helvetica", footer_font_size=40)
+    fig, ax = plt.subplots()
+    gen._render_text_overlays(ax)
+    chars = {t.get_text(): t.get_position()[0] for t in fig.texts if len(t.get_text()) == 1}
+    assert set("ABCD") <= set(chars)  # each letter placed on its own
+    from matplotlib import ft2font
+    face = ft2font.FT2Font(str(ROOT / "fonts" / "HelveticaBold.ttf")); face.set_size(40, 72)
+    advance_pt = face.load_char(ord("A")).linearHoriAdvance / 65536
+    gap_pt = (chars["B"] - chars["A"]) * fig.get_figwidth() * 72
+    assert abs(gap_pt - (advance_pt + 2.0)) < 0.5  # natural advance + tracking equal to the stroke
+    plt.close(fig)
+
+
+def test_tracked_line_survives_a_glyph_the_font_lacks():
+    gen = mg.PosterMapGenerator(footer_left_text="A☃B", footer_y=0.03, footer_stroke=2.0, footer_font_family="Helvetica")
+    fig, ax = plt.subplots()
+    gen._render_text_overlays(ax)  # must not raise on the missing snowman glyph
+    assert {"A", "B"} <= {t.get_text() for t in fig.texts}
+    plt.close(fig)
