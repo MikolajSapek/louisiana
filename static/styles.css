@@ -1,3 +1,10 @@
+/* Own caps-only poster font, so draggable labels match the rendered PNG (built by tools/build_mounties_font.py) */
+@font-face {
+    font-family: "Mounties";
+    src: url("fonts/Mounties.ttf") format("truetype");
+    font-display: swap;
+}
+
 :root {
     color-scheme: light dark;
 }

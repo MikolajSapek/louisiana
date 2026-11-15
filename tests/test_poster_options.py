@@ -251,3 +251,13 @@ def test_bracketed_hint_geocodes_but_is_not_printed(monkeypatch):
     route, warnings = backend._build_route(["Bird [Manitoba]", "Gillam"])
     assert queries == ["Bird Manitoba", "Gillam"]
     assert [p["name"] for p in route] == ["Bird", "Gillam"]
+
+
+def test_mounties_font_is_bundled_caps_only_with_lowercase_mapped():
+    from matplotlib import ft2font
+    assert Path(mg.font_properties("Mounties", bold=True).get_file()).name == "Mounties.ttf"
+    face = ft2font.FT2Font(str(ROOT / "fonts" / "Mounties.ttf"))
+    for text in ("CHURCHILL", "Thompson", "Paweł, Sofia, Mikołaj", "8–14 listopada 2026"):
+        assert all(face.get_char_index(ord(c)) for c in text if c != " "), text
+    assert face.get_char_index(ord("a")) == face.get_char_index(ord("A"))
+    assert (ROOT / "templates" / "index.html").read_text().count('value="Mounties"') == 2  # labels, title/footers

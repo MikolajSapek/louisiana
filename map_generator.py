@@ -33,7 +33,8 @@ BUNDLED_FONTS = {
     "helvetica": ("Helvetica.ttf", "HelveticaBold.ttf"),
     "helvetica regular": ("Helvetica.ttf", "Helvetica.ttf"),  # CN "Piggyback" lettering: never bold
     "superclarendon": ("SuperclarendonBold.ttf", "SuperclarendonBlack.ttf"),
-    "rockwell": ("Rockwell.ttf", "RockwellBold.ttf"),  # closest to the "Mounties" sign lettering
+    "rockwell": ("Rockwell.ttf", "RockwellBold.ttf"),
+    "mounties": ("Mounties.ttf", "Mounties.ttf"),  # own caps-only font after the "MOUNTIES" sign (tools/build_mounties_font.py)  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
 }
 DOUBLE_LINE_GAP = 0.009  # gap between parallel lines of a repeated leg, as a fraction of the map span
