@@ -386,6 +386,10 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
         options["dashed_from"] = int(payload["dashed_from"]) if payload.get("dashed_from") not in (None, "") else None
     except (TypeError, ValueError):
         options["dashed_from"] = None
+    try:
+        options["footer_y"] = max(0.0, min(float(payload["footer_y"]), 0.5)) if payload.get("footer_y") not in (None, "") else None
+    except (TypeError, ValueError):
+        options["footer_y"] = None
     options["show_water"] = _parse_bool(payload.get("show_water"))
     points = []
     for line in re.split(r"[\n;]", str(payload.get("include_points") or "")):  # "lat lon" per line

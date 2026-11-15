@@ -112,6 +112,7 @@ async function submitForm(event) {
         title_font_size: formData.get('title_font_size') || undefined,
         title_color: formData.get('title_color') || undefined,
         footer_font: formData.get('footer_font') || undefined,
+        footer_y: formData.get('footer_y') || undefined,
         dashed_from: formData.get('dashed_from') || undefined,
         show_water: formData.get('show_water') === 'on',
         water_color: formData.get('water_color') || undefined,

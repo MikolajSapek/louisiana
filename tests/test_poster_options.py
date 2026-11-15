@@ -39,8 +39,8 @@ def test_font_properties_bundled_fonts_resolve_to_repo_files():
 
 
 def test_font_properties_unknown_font_uses_family_name():
-    props = mg.font_properties("Futura")
-    assert props.get_file() is None and "Futura" in props.get_family()
+    props = mg.font_properties("Montserrat")
+    assert props.get_file() is None and "Montserrat" in props.get_family()
 
 
 def test_poster_title_and_subtitle_use_chosen_fonts():
@@ -444,3 +444,17 @@ def test_extra_points_widen_the_map_extent(tmp_path):
 def test_include_points_from_form(fake_geocoder):
     _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "include_points": "58.8 -90\nbad\n49.5 -101.2"})
     assert options["include_points"] == [(58.8, -90.0), (49.5, -101.2)]
+
+
+def test_single_line_footer_sits_on_a_baseline_at_footer_y():
+    gen = mg.PosterMapGenerator(footer_left_text="Paweł, Sofia & Mikołaj · 8–14 listopada 2026", footer_y=0.0342)
+    fig, ax = plt.subplots()
+    gen._render_text_overlays(ax)
+    t = [t for t in fig.texts if t.get_text().startswith("Paweł")][0]
+    assert t.get_position() == (0.04, 0.0342) and t.get_verticalalignment() == "baseline"
+    plt.close(fig)
+
+
+def test_footer_y_from_form(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_y": "0.0342"})
+    assert options["footer_y"] == 0.0342

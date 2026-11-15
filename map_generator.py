@@ -52,6 +52,9 @@ BUNDLED_FONTS = {
     # Baskerville: the Government of Canada "Canada" wordmark face (private copy of the macOS font)
     "baskerville": ("private/Baskerville.ttf", "private/BaskervilleSemiBold.ttf"),
     "baskerville regular": ("private/Baskerville.ttf", "private/Baskerville.ttf"),
+    "futura": ("private/FuturaMedium.ttf", "private/FuturaBold.ttf"),  # private copy of the macOS font
+    "futura medium": ("private/FuturaMedium.ttf", "private/FuturaMedium.ttf"),
+    "baskerville semibold": ("private/BaskervilleSemiBold.ttf", "private/BaskervilleSemiBold.ttf"),
     "north railway": ("private/NorthRailway-DEMO.ttf", "private/NorthRailway-DEMO.ttf"),  # demo: A-Z only, private use
     "north railway pl": ("private/NorthRailwayPL.ttf", "private/NorthRailwayPL.ttf"),  # + digits, Ł/ł (tools/build_northrailway_pl.py)  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
@@ -230,6 +233,7 @@ class MapGenerator:
         show_water: bool = False,
         water_color: Optional[str] = None,
         include_points: Optional[List[Tuple[float, float]]] = None,
+        footer_y: Optional[float] = None,
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -291,6 +295,7 @@ class MapGenerator:
         self.show_water = bool(show_water)  # seas and lakes from Natural Earth, a shade darker than the background
         self.water_color = water_color
         self.include_points = [(float(a), float(b)) for a, b in (include_points or [])]  # (lat, lon)
+        self.footer_y = footer_y  # footer baseline, fraction of poster height (None = format default)
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -1014,6 +1019,8 @@ class MapGenerator:
     ):
         """Renderuje tekst stopki z obsługą układu poziomego i pionowego (dla fig.text)."""
         font_family = self.footer_font_family or font_family
+        if self.footer_y is not None:
+            y = self.footer_y
         if layout == "vertical":
             # Dla układu pionowego, używamy jednego wywołania z linespacing dla lepszego formatowania
             # Renderujemy cały tekst z parametrem linespacing dla lepszych odstępów między liniami
@@ -1035,7 +1042,7 @@ class MapGenerator:
                 y,
                 text,
                 ha=ha,
-                va='bottom',
+                va='baseline',  # one line: sits on a baseline (aligns with the logo wordmark)
                 fontsize=font_size,
                 fontproperties=font_properties(font_family, bold=True),
                 color=font_color,
