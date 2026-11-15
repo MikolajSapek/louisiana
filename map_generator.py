@@ -47,6 +47,9 @@ BUNDLED_FONTS = {
     "aboriginal sans": ("private/AboriginalSansBOLD.ttf", "private/AboriginalSansBOLD.ttf"),
     "aboriginal sans shadow": ("private/AboriginalSansShadow.ttf", "private/AboriginalSansShadow.ttf"),
     "aboriginal serif": ("private/AboriginalSerifBOLD.ttf", "private/AboriginalSerifBOLD.ttf"),
+    # Baskerville: the Government of Canada "Canada" wordmark face (private copy of the macOS font)
+    "baskerville": ("private/Baskerville.ttf", "private/BaskervilleSemiBold.ttf"),
+    "baskerville regular": ("private/Baskerville.ttf", "private/Baskerville.ttf"),
     "north railway": ("private/NorthRailway-DEMO.ttf", "private/NorthRailway-DEMO.ttf"),  # demo: A-Z only, private use
     "north railway pl": ("private/NorthRailwayPL.ttf", "private/NorthRailwayPL.ttf"),  # + digits, Ł/ł (tools/build_northrailway_pl.py)  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
