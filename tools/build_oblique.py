@@ -10,7 +10,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
 
 PRIVATE = Path(__file__).resolve().parent.parent / "fonts" / "private"
-SLANT = 12  # degrees, a typical italic angle
+SLANT = -12  # degrees; negative leans left (backslant, the owner chose this)
 SOURCES = ["Indians", "IndiansBold", "IndiansBoldOutline"]
 
 
