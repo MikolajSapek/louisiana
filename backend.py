@@ -358,6 +358,7 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
         "repeated_legs": repeated_legs,
         "footer_signature": payload.get("footer_signature") or None,
     }
+    options["footer_font_family"] = payload.get("footer_font") or None
     for key in ("title_color", "subtitle_color", "label_color"):  # #RRGGBB only; anything else = font colour
         value = payload.get(key)
         options[key] = value if isinstance(value, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", value) else None

@@ -233,7 +233,7 @@ def test_rockwell_bundled_heavy_for_titles_and_in_form():
     assert Path(mg.font_properties("Rockwell").get_file()).name == "Rockwell.ttf"
     assert Path(mg.title_font_properties("Rockwell").get_file()).name == "RockwellBold.ttf"
     html = (ROOT / "templates" / "index.html").read_text()
-    assert html.count('value="Rockwell"') == 3  # labels, title/footers, subtitle
+    assert html.count('value="Rockwell"') == 4  # labels, title, subtitle, footer
 
 
 def test_footer_signature_is_small():
@@ -330,3 +330,22 @@ def test_colours_fall_back_to_font_colour_and_reach_generator(fake_geocoder):
     assert gen.title_color == gen.subtitle_color == gen.label_color == "#123456"
     _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "title_color": "#F2C21B", "label_color": "nope"})
     assert options["title_color"] == "#F2C21B" and options["label_color"] is None
+
+
+def test_footer_font_is_separate_from_title_font():
+    gen = mg.PosterMapGenerator(title_text="CHURCHILL", text_font_family="Superclarendon", footer_font_family="Helvetica",
+                                footer_left_text="Paweł Sofia Mikołaj")
+    fig, ax = plt.subplots()
+    gen._render_text_overlays(ax)
+    files = {t.get_text(): Path(t.get_fontproperties().get_file()).name for t in fig.texts}
+    assert files["CHURCHILL"] == "SuperclarendonBlack.ttf" and files["Paweł Sofia Mikołaj"] == "HelveticaBold.ttf"
+    plt.close(fig)
+
+
+def test_footer_font_reaches_generator(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_font": "Helvetica"})
+    assert options["footer_font_family"] == "Helvetica"
+
+
+def test_private_north_railway_registered():
+    assert mg.BUNDLED_FONTS["north railway"][0].startswith("private/")

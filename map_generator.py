@@ -36,7 +36,8 @@ BUNDLED_FONTS = {
     "rockwell": ("Rockwell.ttf", "RockwellBold.ttf"),
     # private, local-only (fonts/private is git- and vercel-ignored): personal posters, never published
     "mounties": ("private/Mounties.ttf", "private/Mounties.ttf"),
-    "indians": ("private/Indians.ttf", "private/Indians.ttf"),  # tools/build_indians_font.py  # closest to the "Mounties" sign lettering
+    "indians": ("private/Indians.ttf", "private/Indians.ttf"),  # tools/build_indians_font.py
+    "north railway": ("private/NorthRailway-DEMO.ttf", "private/NorthRailway-DEMO.ttf"),  # demo: A-Z only, private use  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
 }
 DOUBLE_LINE_GAP = 0.009  # gap between parallel lines of a repeated leg, as a fraction of the map span
@@ -182,6 +183,7 @@ class MapGenerator:
         title_color: Optional[str] = None,
         subtitle_color: Optional[str] = None,
         label_color: Optional[str] = None,
+        footer_font_family: Optional[str] = None,
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -235,6 +237,7 @@ class MapGenerator:
         self.title_color = title_color or font_color
         self.subtitle_color = subtitle_color or font_color
         self.label_color = label_color or font_color
+        self.footer_font_family = footer_font_family  # None = same as the title font
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -905,6 +908,7 @@ class MapGenerator:
         transform=None,
     ):
         """Renderuje tekst stopki z obsługą układu poziomego i pionowego (dla ax.text)."""
+        font_family = self.footer_font_family or font_family
         if layout == "vertical":
             # Dla układu pionowego, używamy jednego wywołania z linespacing dla lepszego formatowania
             # Renderujemy cały tekst z parametrem linespacing dla lepszych odstępów między liniami
@@ -947,6 +951,7 @@ class MapGenerator:
         font_size: float,
     ):
         """Renderuje tekst stopki z obsługą układu poziomego i pionowego (dla fig.text)."""
+        font_family = self.footer_font_family or font_family
         if layout == "vertical":
             # Dla układu pionowego, używamy jednego wywołania z linespacing dla lepszego formatowania
             # Renderujemy cały tekst z parametrem linespacing dla lepszych odstępów między liniami

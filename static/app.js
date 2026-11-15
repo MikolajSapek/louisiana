@@ -111,6 +111,7 @@ async function submitForm(event) {
         footer_signature: formData.get('footer_signature') || undefined,
         title_font_size: formData.get('title_font_size') || undefined,
         title_color: formData.get('title_color') || undefined,
+        footer_font: formData.get('footer_font') || undefined,
         subtitle_color: formData.get('subtitle_color') || undefined,
         label_color: formData.get('label_color') || undefined,
         label_font_size: formData.get('label_font_size') || undefined,
