@@ -41,3 +41,4 @@ preview_server.log
 
 # private fonts: local posters only, never published
 fonts/private/
+local_site.log

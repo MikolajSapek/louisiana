@@ -12,7 +12,7 @@ if IS_VERCEL:
     # Set matplotlib config directory to /tmp on Vercel
     os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib"
 
-from flask import Flask, jsonify, render_template, request, send_from_directory, url_for
+from flask import Flask, abort, jsonify, render_template, request, send_from_directory, url_for
 
 from geocoder import Geocoder
 from label_overrides import load_overrides, update_override, reset_override, set_override
@@ -36,6 +36,7 @@ except (OSError, PermissionError) as e:
     import logging
     logging.warning(f"Could not create MAP_STORAGE_DIR {MAP_STORAGE_DIR}: {e}")
 
+PRIVATE_FONT_DIR = BASE_DIR / "fonts" / "private"  # local-only fonts (git- and vercel-ignored)
 LOGO_DIR = BASE_DIR / "logos"  # not static/: Vercel serves static/ from the CDN, outside the function
 LOGO_PRESETS = {p.stem for p in LOGO_DIR.glob("*.png")}  # allowlist: only files shipped in static/logos
 
@@ -129,6 +130,28 @@ def index() -> str:
 def serve_map(filename: str):
     """Serwuje wygenerowane mapy zarówno lokalnie, jak i na Vercel."""
     return send_from_directory(str(MAP_STORAGE_DIR), filename, mimetype="image/png")
+
+
+@app.get("/private-fonts/<path:filename>")
+def private_font(filename: str):
+    """Private fonts for the draggable labels; served only by a local copy of the site, never on Vercel."""
+    path = (PRIVATE_FONT_DIR / filename).resolve()
+    if IS_VERCEL or PRIVATE_FONT_DIR.resolve() not in path.parents or not path.is_file():
+        abort(404)
+    return send_from_directory(str(PRIVATE_FONT_DIR), filename)
+
+
+def _label_font_url(name: Optional[str]) -> Optional[str]:
+    """URL of the private label font so the page's draggable labels use the real glyphs (local only)."""
+    if IS_VERCEL:
+        return None
+    from map_generator import BUNDLED_FONTS
+
+    files = BUNDLED_FONTS.get((name or "").strip().lower())
+    if not files or not files[1].startswith("private/"):
+        return None
+    filename = files[1].split("/", 1)[1]
+    return url_for("private_font", filename=filename) if (PRIVATE_FONT_DIR / filename).is_file() else None
 
 
 @app.post("/api/generate")
@@ -453,6 +476,7 @@ def _create_map(
     map_info["paper_label"] = paper_meta.get("label")
     map_info["paper_orientation"] = paper_meta.get("orientation")
     map_info["mapUrl"] = url_for("serve_map", filename=filename)
+    map_info.setdefault("style", {})["font_url"] = _label_font_url(options.get("font_family"))
     return map_info
 
 

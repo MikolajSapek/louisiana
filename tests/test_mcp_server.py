@@ -76,3 +76,10 @@ def test_site_link_pins_coordinates_so_the_site_skips_geocoding():
 def test_site_link_can_leave_geocoding_to_the_site():
     url = mcp_server.site_link(["Winnipeg"], pin_coordinates=False)
     assert _decode(url)["cities"] == "Winnipeg"
+
+
+def test_site_link_local_targets_the_local_site(monkeypatch):
+    started = []
+    monkeypatch.setattr(mcp_server, "_ensure_local_site", lambda: started.append(1) or "http://127.0.0.1:5056/")
+    url = mcp_server.site_link(["Winnipeg"], local=True, pin_coordinates=False)
+    assert url.startswith("http://127.0.0.1:5056/#p=") and started == [1]

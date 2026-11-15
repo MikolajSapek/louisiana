@@ -20,6 +20,9 @@ from mcp.server.mcpserver import MCPServer
 import backend
 
 SITE_URL = "https://louisiana.vercel.app/"
+LOCAL_PORT = 5056
+LOCAL_URL = f"http://127.0.0.1:{LOCAL_PORT}/"
+REPO_DIR = __import__("pathlib").Path(__file__).parent.resolve()
 PAPER_FORMATS = ("POSTER_50X70", "POSTER_70X50", "POSTER_60X100", "POSTER_100X60", "POSTCARD")
 
 server = MCPServer(
@@ -66,6 +69,20 @@ def _pin(city: str) -> str:
     with contextlib.redirect_stdout(sys.stderr):  # stdout is the MCP channel; geocoder prints errors
         coords = backend.get_geocoder().get_coordinates(query)
     return f"{label} [{coords[0]:.6g} {coords[1]:.6g}]" if coords else city
+
+
+def _ensure_local_site() -> str:
+    """Start the local copy of the site (has the private fonts) in the background, once."""
+    import socket
+    import subprocess
+
+    with socket.socket() as sock:
+        sock.settimeout(0.3)
+        if sock.connect_ex(("127.0.0.1", LOCAL_PORT)) != 0:
+            log = open(REPO_DIR / "local_site.log", "ab")
+            subprocess.Popen([sys.executable, "-m", "flask", "--app", "backend", "run", "--port", str(LOCAL_PORT)],
+                             cwd=REPO_DIR, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+    return LOCAL_URL
 
 
 def _open_browser(url: str) -> None:
@@ -119,6 +136,7 @@ def site_link(
     merge_bidirectional_routes: bool | None = None,
     open_in_browser: bool = True,
     pin_coordinates: bool = True,
+    local: bool = False,
 ) -> str:
     """Open this project on louisiana.vercel.app: the form is filled in and the site draws the poster.
 
@@ -132,6 +150,8 @@ def site_link(
     footer_left: text in the bottom-left corner (newline = stacked lines). footer_signature: 'mikolaj' draws
       the owner's signature stroke under it.
     Colours as #RRGGBB. Opens the browser unless open_in_browser is false; returns the link.
+    local: open the local copy of the site on this Mac (it has the private fonts: Mounties, Indians, North Railway)
+      instead of louisiana.vercel.app; labels are draggable there too.
     pin_coordinates: look cities up here and send them as 'Name [lat lon]' so the site never geocodes
       (its shared server IP gets throttled and towns go missing). Unfound cities are sent as typed.
     """
@@ -151,6 +171,8 @@ def site_link(
         "title_color": title_color, "footer_font": footer_font, "subtitle_color": subtitle_color, "label_color": label_color, "show_borders": show_borders,
         "merge_bidirectional_routes": merge_bidirectional_routes,
     })
+    if local:
+        url = url.replace(SITE_URL, _ensure_local_site(), 1)
     if open_in_browser:
         _open_browser(url)
     return url

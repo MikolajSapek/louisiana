@@ -380,10 +380,13 @@ function renderLabelOverlay() {
 
     const labelFontPxBase = Number(currentStyle?.label_font_size_px ?? 24);
     // "Helvetica Regular" is a weight choice of Helvetica, not a CSS family name
-    const labelFontFamily = currentStyle?.font_family
-        ? `"${currentStyle.font_family.replace(/ Regular$/, '')}", Helvetica, Arial, sans-serif`
-        : 'Helvetica, Arial, sans-serif';
-    const labelFontColor = currentStyle?.font_color || '#ffffff';
+    const privateFamily = loadPrivateLabelFont(currentStyle?.font_url);
+    const labelFontFamily = privateFamily
+        ? `"${privateFamily}", Helvetica, Arial, sans-serif`
+        : currentStyle?.font_family
+            ? `"${currentStyle.font_family.replace(/ Regular$/, '')}", Helvetica, Arial, sans-serif`
+            : 'Helvetica, Arial, sans-serif';
+    const labelFontColor = currentStyle?.label_color || currentStyle?.font_color || '#ffffff';
     const backgroundColor = currentMapInfo?.style?.background_color || currentMapInfo?.background_color || '#0a3dbb';
 
     function hideLabel(item) {
@@ -751,6 +754,20 @@ if (downloadButton) {
 
 // Project link from the terminal (mcp_server.py site_link): #p=<base64url JSON>.
 // Fills the form with the project and generates the poster once.
+// Private fonts exist only on a local copy of the site; load them so draggable labels match the render.
+const loadedPrivateFonts = new Map();
+function loadPrivateLabelFont(url) {
+    if (!url || !('FontFace' in window)) return null;
+    if (!loadedPrivateFonts.has(url)) {
+        const family = `LouisianaPrivate${loadedPrivateFonts.size}`;
+        loadedPrivateFonts.set(url, family);
+        new FontFace(family, `url(${url})`).load()
+            .then((face) => { document.fonts.add(face); renderLabelOverlay(); })
+            .catch((error) => console.warn('Nie udało się wczytać czcionki etykiet:', error));
+    }
+    return loadedPrivateFonts.get(url);
+}
+
 function decodeProjectHash(hash) {
     const match = /(?:^#|&)p=([^&]+)/.exec(hash || '');
     if (!match) return null;

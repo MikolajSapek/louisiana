@@ -599,6 +599,7 @@ class MapGenerator:
             "style": {
                 "font_family": self.font_family,
                 "font_color": self.font_color,
+                "label_color": self.label_color,
                 "label_font_size_pt": float(self._label_font_size_pt()),
                 "label_font_size_px": label_font_px,
                 "background_color": self.background_color,

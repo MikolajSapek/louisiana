@@ -349,3 +349,25 @@ def test_footer_font_reaches_generator(fake_geocoder):
 
 def test_private_north_railway_registered():
     assert mg.BUNDLED_FONTS["north railway"][0].startswith("private/")
+
+
+def test_private_font_served_locally_but_never_on_vercel(monkeypatch, tmp_path):
+    (tmp_path / "private").mkdir()
+    (tmp_path / "private" / "X.ttf").write_bytes(b"font")
+    monkeypatch.setattr(backend, "PRIVATE_FONT_DIR", tmp_path / "private")
+    client = backend.app.test_client()
+    monkeypatch.setattr(backend, "IS_VERCEL", False)
+    assert client.get("/private-fonts/X.ttf").status_code == 200
+    assert client.get("/private-fonts/../backend.py").status_code == 404
+    monkeypatch.setattr(backend, "IS_VERCEL", True)
+    assert client.get("/private-fonts/X.ttf").status_code == 404
+
+
+def test_label_font_url_only_for_private_fonts_when_local(monkeypatch):
+    monkeypatch.setattr(backend, "IS_VERCEL", False)
+    with backend.app.test_request_context():
+        assert backend._label_font_url("North Railway").endswith("/private-fonts/NorthRailway-DEMO.ttf")
+        assert backend._label_font_url("Helvetica") is None
+    monkeypatch.setattr(backend, "IS_VERCEL", True)
+    with backend.app.test_request_context():
+        assert backend._label_font_url("North Railway") is None
