@@ -474,3 +474,19 @@ def test_multiline_footer_puts_each_line_on_its_own_baseline():
 def test_footer_line_gap_from_form(fake_geocoder):
     _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_line_gap": "0.018"})
     assert options["footer_line_gap"] == 0.018
+
+
+def test_footer_stroke_thickens_footer_letters():
+    gen = mg.PosterMapGenerator(footer_left_text="PAWEŁ\nSOFIA", footer_y=0.03, footer_line_gap=0.03,
+                                footer_stroke=2.5, font_color="#f2c318")
+    fig, ax = plt.subplots()
+    gen._render_text_overlays(ax)
+    t = [t for t in fig.texts if t.get_text() == "SOFIA"][0]
+    effects = t.get_path_effects()
+    assert effects and effects[0]._gc["linewidth"] == 2.5 and matplotlib.colors.to_hex(effects[0]._gc["foreground"]) == "#f2c318"
+    plt.close(fig)
+
+
+def test_footer_stroke_from_form(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_stroke": "2.5"})
+    assert options["footer_stroke"] == 2.5
