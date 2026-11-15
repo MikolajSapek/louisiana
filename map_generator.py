@@ -43,6 +43,9 @@ BUNDLED_FONTS = {
     "indians bold": ("private/IndiansBold.ttf", "private/IndiansBold.ttf"),  # INDIANS_FACE="Futura Bold"
     "indians outline": ("private/IndiansOutline.ttf", "private/IndiansOutline.ttf"),  # + INDIANS_OUTLINE=0.018
     "indians bold outline": ("private/IndiansBoldOutline.ttf", "private/IndiansBoldOutline.ttf"),  # most readable
+    "indians italic": ("private/IndiansItalic.ttf", "private/IndiansItalic.ttf"),  # tools/build_oblique.py, 12 deg
+    "indians bold italic": ("private/IndiansBoldItalic.ttf", "private/IndiansBoldItalic.ttf"),
+    "indians bold outline italic": ("private/IndiansBoldOutlineItalic.ttf", "private/IndiansBoldOutlineItalic.ttf"),
     # Canadian typefaces (private copies): Canada 1500 = public-domain Canada 150 face by Ray Larabie,
     # Aboriginal Sans/Serif = Chris Harvey (languagegeek) for Cree, Ojibwe, Dene; "shadow" = Indians treatment
     "canada 1500": ("private/canada1500-rg.ttf", "private/canada1500-bd.ttf"),
