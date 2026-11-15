@@ -71,7 +71,7 @@ def _parse_bool(value: Any) -> bool:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        return value.lower() in {"1", "true", "t", "yes", "y", "tak"}
+        return value.lower() in {"1", "true", "t", "yes", "y", "tak", "on"}
     if isinstance(value, (int, float)):
         return value != 0
     return False
@@ -382,6 +382,23 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
         "footer_signature": payload.get("footer_signature") or None,
     }
     options["footer_font_family"] = payload.get("footer_font") or None
+    try:
+        options["dashed_from"] = int(payload["dashed_from"]) if payload.get("dashed_from") not in (None, "") else None
+    except (TypeError, ValueError):
+        options["dashed_from"] = None
+    options["show_water"] = _parse_bool(payload.get("show_water"))
+    points = []
+    for line in re.split(r"[\n;]", str(payload.get("include_points") or "")):  # "lat lon" per line
+        match = re.fullmatch(r"\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*", line)
+        if match:
+            points.append((float(match.group(1)), float(match.group(2))))
+    options["include_points"] = points
+    wc = payload.get("water_color")
+    options["water_color"] = wc if isinstance(wc, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", wc) else None
+    for key in ("major_labels", "minor_labels"):  # names separated by newlines or commas
+        raw = payload.get(key) or ""
+        items = raw if isinstance(raw, list) else re.split(r"[\n,]", str(raw))
+        options[key] = [s.strip() for s in items if s and s.strip()]
     for key in ("title_color", "subtitle_color", "label_color"):  # #RRGGBB only; anything else = font colour
         value = payload.get(key)
         options[key] = value if isinstance(value, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", value) else None

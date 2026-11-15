@@ -130,6 +130,12 @@ def site_link(
     title_color: str | None = None,
     footer_font: str | None = None,
     footer_font_size: float | None = None,
+    dashed_from: int | None = None,
+    show_water: bool | None = None,
+    water_color: str | None = None,
+    include_points: str | None = None,
+    major_labels: list[str] | None = None,
+    minor_labels: list[str] | None = None,
     subtitle_color: str | None = None,
     label_color: str | None = None,
     label_font_size: float | None = None,
@@ -148,6 +154,10 @@ def site_link(
     line_style: solid | dashed | dotted | dashdot | dot. line_outline_color: dark edge under the line (rail-map look).
     point_edge_color: ring around city dots. curve_strength: 0 = straight legs (rail-map look), empty = default arcs. repeated_legs: 'double' draws a leg ridden twice as two parallel lines.
     corner_logo (bottom-right): via_yellow, via_yellow_full, via_cream, via_dark, via_dark_full.
+    dashed_from: 1-based city index from which legs are dashed and thinner (e.g. where the bus starts).
+    show_water: draw seas and lakes (Natural Earth 1:50m) a shade darker than the background (or water_color).
+    include_points: extra "lat lon" lines the map must cover (e.g. "58.8 -90" to show Hudson Bay by Churchill).
+    major_labels / minor_labels: place names drawn bigger in the title colour / smaller.
     footer_left: text in the bottom-left corner (newline = stacked lines). footer_signature: 'mikolaj' draws
       the owner's signature stroke under it.
     Colours as #RRGGBB. Opens the browser unless open_in_browser is false; returns the link.
@@ -169,7 +179,9 @@ def site_link(
         "point_style": point_style, "point_color": point_color, "point_edge_color": point_edge_color,
         "repeated_legs": repeated_legs, "curve_strength": curve_strength, "corner_logo": corner_logo, "footer_signature": footer_signature,
         "title_font_size": title_font_size, "label_font_size": label_font_size,
-        "title_color": title_color, "footer_font": footer_font, "footer_font_size": footer_font_size, "subtitle_color": subtitle_color, "label_color": label_color, "show_borders": show_borders,
+        "title_color": title_color, "footer_font": footer_font, "footer_font_size": footer_font_size,
+        "dashed_from": dashed_from, "show_water": show_water, "water_color": water_color, "include_points": include_points,
+        "major_labels": major_labels, "minor_labels": minor_labels, "subtitle_color": subtitle_color, "label_color": label_color, "show_borders": show_borders,
         "merge_bidirectional_routes": merge_bidirectional_routes,
     })
     if local:

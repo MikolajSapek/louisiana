@@ -395,3 +395,52 @@ def test_north_railway_pl_covers_the_footer():
 def test_footer_font_size_from_form_reaches_generator(fake_geocoder):
     _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_font_size": "50"})
     assert options["footer_font_size"] == 50.0
+
+
+def test_legs_after_dashed_from_are_dashed_and_thinner(tmp_path, keep_figure):
+    gen = mg.PosterMapGenerator(line_style="solid", line_outline_color="#101511", dashed_from=3, dpi=20)
+    gen.generate_map(ROUTE, str(tmp_path / "m.png"))  # legs: 1-2, 2-3 solid; 3-4, 4-5 dashed (bus)
+    lines = _route_lines(plt.gcf())
+    solid = [l for l in lines if l.get_linestyle() == "-"]
+    dashed = [l for l in lines if l.get_linestyle() == "--"]
+    assert len(dashed) == 2  # bus legs, no outline under them
+    assert len(solid) == 4  # 2 train legs x (outline + core)
+    assert dashed[0].get_linewidth() < max(l.get_linewidth() for l in solid if matplotlib.colors.to_hex(l.get_color()) != "#101511")
+
+
+def test_major_and_minor_labels_change_size_and_colour(tmp_path, keep_figure):
+    gen = mg.PosterMapGenerator(label_font_size=30, title_color="#f2c318", label_color="#e8e9eb",
+                                major_labels=["Churchill"], minor_labels=["Gillam"], dpi=20)
+    gen.generate_map(ROUTE, str(tmp_path / "m.png"))
+    texts = {t.get_text(): t for t in plt.gcf().axes[0].texts}
+    assert texts["Churchill"].get_fontsize() > 30 and matplotlib.colors.to_hex(texts["Churchill"].get_color()) == "#f2c318"
+    assert texts["Gillam"].get_fontsize() < 30
+    assert texts["Thompson"].get_fontsize() == 30
+
+
+def test_water_is_drawn_when_enabled(tmp_path, keep_figure, monkeypatch):
+    square = [[(-100.0, 50.0), (-90.0, 50.0), (-90.0, 60.0), (-100.0, 60.0), (-100.0, 50.0)]]
+    monkeypatch.setattr(mg.MapGenerator, "_get_water_paths", lambda self: [mg.rings_to_path(square)])
+    gen = mg.PosterMapGenerator(show_water=True, water_color="#083a7a", dpi=20)
+    gen.generate_map(ROUTE, str(tmp_path / "m.png"))
+    patches = [p for p in plt.gcf().axes[0].patches if p.get_gid() == "water"]
+    assert len(patches) == 1 and matplotlib.colors.to_hex(patches[0].get_facecolor()) == "#083a7a"
+
+
+def test_new_map_options_reach_generator(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "dashed_from": "16", "show_water": "on",
+                                                    "water_color": "#083A7A", "major_labels": "Churchill\nWinnipeg",
+                                                    "minor_labels": "Bird, Ilford"})
+    assert options["dashed_from"] == 16 and options["show_water"] is True and options["water_color"] == "#083A7A"
+    assert options["major_labels"] == ["Churchill", "Winnipeg"] and options["minor_labels"] == ["Bird", "Ilford"]
+
+
+def test_extra_points_widen_the_map_extent(tmp_path):
+    base = mg.PosterMapGenerator(dpi=10).generate_map(ROUTE, str(tmp_path / "a.png"))["bounds"]
+    wide = mg.PosterMapGenerator(dpi=10, include_points=[(58.8, -90.0)]).generate_map(ROUTE, str(tmp_path / "b.png"))["bounds"]
+    assert wide["lon_max"] > -90.0 > base["lon_max"]
+
+
+def test_include_points_from_form(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "include_points": "58.8 -90\nbad\n49.5 -101.2"})
+    assert options["include_points"] == [(58.8, -90.0), (49.5, -101.2)]

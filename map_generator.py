@@ -18,6 +18,8 @@ import matplotlib.lines
 import numpy as np
 import requests
 from matplotlib.collections import PolyCollection
+from matplotlib.patches import PathPatch
+from matplotlib.path import Path as MplPath
 from PIL import Image
 try:
     from adjustText import adjust_text  # type: ignore
@@ -80,6 +82,30 @@ def signature_points(path: str) -> np.ndarray:
     pts = np.array(nums, dtype=float).reshape(-1, 2)
     pts[:, 1] = -pts[:, 1]
     return pts
+
+
+WATER_SOURCES = (  # Natural Earth 1:50m, same repo as the country borders
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_ocean.geojson",
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_lakes.geojson",
+)
+_WATER_CACHE: Optional[List[Any]] = None
+
+
+def _darker(colour: str, factor: float) -> str:
+    r, g, b = matplotlib.colors.to_rgb(colour)
+    return matplotlib.colors.to_hex((r * factor, g * factor, b * factor))
+
+
+def rings_to_path(rings: List[List[Tuple[float, float]]]) -> MplPath:
+    """One matplotlib Path from polygon rings (outer + holes), so holes such as islands stay empty."""
+    verts, codes = [], []
+    for ring in rings:
+        pts = [tuple(p[:2]) for p in ring]
+        if len(pts) < 3:
+            continue
+        verts += pts + [pts[0]]
+        codes += [MplPath.MOVETO] + [MplPath.LINETO] * (len(pts) - 1) + [MplPath.CLOSEPOLY]
+    return MplPath(verts, codes)
 
 
 DISPLAY_FONTS = {"superclarendon", "rockwell"}  # titles use the heavy face only for display fonts
@@ -198,6 +224,12 @@ class MapGenerator:
         subtitle_color: Optional[str] = None,
         label_color: Optional[str] = None,
         footer_font_family: Optional[str] = None,
+        dashed_from: Optional[int] = None,
+        major_labels: Optional[List[str]] = None,
+        minor_labels: Optional[List[str]] = None,
+        show_water: bool = False,
+        water_color: Optional[str] = None,
+        include_points: Optional[List[Tuple[float, float]]] = None,
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -252,6 +284,13 @@ class MapGenerator:
         self.subtitle_color = subtitle_color or font_color
         self.label_color = label_color or font_color
         self.footer_font_family = footer_font_family  # None = same as the title font
+        # legs starting at this 1-based city index are drawn dashed and thinner (e.g. the bus part of a trip)
+        self.dashed_from = int(dashed_from) if dashed_from else None
+        self.major_labels = set(major_labels or [])  # bigger, in the title colour (start / destination)
+        self.minor_labels = set(minor_labels or [])  # smaller (sidings, minor stops)
+        self.show_water = bool(show_water)  # seas and lakes from Natural Earth, a shade darker than the background
+        self.water_color = water_color
+        self.include_points = [(float(a), float(b)) for a, b in (include_points or [])]  # (lat, lon)
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -296,8 +335,11 @@ class MapGenerator:
         names = [city["name"] for city in valid_cities]
         
         # Oblicz zakresy i marginesy, aby zdecydować o orientacji papieru
-        lat_span = max(lats) - min(lats) if len(lats) > 1 else 0.0
-        lon_span = max(lons) - min(lons) if len(lons) > 1 else 0.0
+        # the map extent also covers include_points (e.g. a coastline the route only touches)
+        ext_lats = lats + [p[0] for p in self.include_points]
+        ext_lons = lons + [p[1] for p in self.include_points]
+        lat_span = max(ext_lats) - min(ext_lats) if len(ext_lats) > 1 else 0.0
+        lon_span = max(ext_lons) - min(ext_lons) if len(ext_lons) > 1 else 0.0
 
         # Add margins around the route to make room for labels
         # Dla pocztówek zmniejsz minimalny margines, aby uzyskać większy zoom
@@ -305,10 +347,10 @@ class MapGenerator:
         margin_lat = max(min_margin, lat_span * self._margin_factor_lat(lat_span))
         margin_lon = max(min_margin, lon_span * self._margin_factor_lon(lon_span))
 
-        lat_min = min(lats) - margin_lat
-        lat_max = max(lats) + margin_lat
-        lon_min = min(lons) - margin_lon
-        lon_max = max(lons) + margin_lon
+        lat_min = min(ext_lats) - margin_lat
+        lat_max = max(ext_lats) + margin_lat
+        lon_min = min(ext_lons) - margin_lon
+        lon_max = max(ext_lons) + margin_lon
 
         # Dobierz rozmiar figury (format papieru lub domyślne)
         figsize = self.figsize
@@ -336,6 +378,8 @@ class MapGenerator:
         fig.patch.set_facecolor(self.background_color)
         ax.set_facecolor(self.background_color)
         ax.set_aspect('equal', adjustable='box')
+        if self.show_water:
+            self._draw_water(ax)
         
         # Rysuj połączenia między kolejnymi miastami jako delikatnie zakrzywione linie
         if len(valid_cities) > 1:
@@ -418,8 +462,11 @@ class MapGenerator:
                             "linewidth": base_linewidth,
                         }
                     )
+                dashed_leg = bool(self.dashed_from) and i >= self.dashed_from - 1 and not marker_line
+                if dashed_leg:  # second means of transport: dashed, thinner, no outline
+                    line_kwargs.update({"linestyle": "--", "linewidth": base_linewidth * 0.65, "alpha": 1.0})
 
-                if self.line_outline_color and not marker_line:
+                if self.line_outline_color and not marker_line and not dashed_leg:
                     # Rail-map look: a wider dark edge under the coloured line
                     line_kwargs.update({"alpha": 1.0, "solid_capstyle": "round", "solid_joinstyle": "round"})
                     ax.plot(
@@ -502,8 +549,8 @@ class MapGenerator:
                 ha="center",
                 va="bottom",
                 fontproperties=label_font,
-                fontsize=label_font_pt,
-                color=self.label_color,
+                fontsize=label_font_pt * (1.35 if city["name"] in self.major_labels else 0.78 if city["name"] in self.minor_labels else 1.0),
+                color=self.title_color if city["name"] in self.major_labels else self.label_color,
                 zorder=8,
                 clip_on=False,  # Don't clip labels - allow them to be visible
                 bbox=None,  # Wyłącz bbox - nie chcemy prostokątów przy etykietach
@@ -1126,6 +1173,32 @@ class MapGenerator:
                 break
 
         return prev_city, next_city
+
+    def _draw_water(self, ax: plt.Axes) -> None:
+        """Seas and lakes, filled a shade darker than the background."""
+        colour = self.water_color or _darker(self.background_color, 0.78)
+        for path in self._get_water_paths():
+            # clip_on=False: water continues past the map frame to the poster edge instead of ending in a straight line
+            ax.add_patch(PathPatch(path, facecolor=colour, edgecolor="none", zorder=0.5, gid="water", clip_on=False))
+
+    def _get_water_paths(self) -> List[MplPath]:
+        global _WATER_CACHE
+        if _WATER_CACHE is not None:
+            return _WATER_CACHE
+        paths: List[MplPath] = []
+        for url in WATER_SOURCES:
+            try:
+                data = requests.get(url, timeout=20).json()
+            except Exception as exc:  # no network: poster without water rather than no poster
+                print(f"⚠ Nie udało się wczytać wody ({url.rsplit('/', 1)[-1]}): {exc}")
+                continue
+            for feature in data.get("features", []):
+                geom = feature.get("geometry") or {}
+                polys = geom.get("coordinates", [])
+                for rings in ([polys] if geom.get("type") == "Polygon" else polys):
+                    paths.append(rings_to_path(rings))
+        _WATER_CACHE = paths
+        return paths
 
     def _draw_country_borders(self, ax: plt.Axes) -> None:
         """
