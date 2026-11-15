@@ -192,3 +192,26 @@ def test_helvetica_regular_choice_keeps_regular_face_for_labels():
     assert Path(mg.font_properties("Helvetica Regular", bold=True).get_file()).name == "Helvetica.ttf"
     html = (ROOT / "templates" / "index.html").read_text()
     assert 'value="Helvetica Regular"' in html
+
+
+def test_footer_signature_draws_mikolaj_stroke_bottom_left(tmp_path, keep_figure):
+    gen = mg.PosterMapGenerator(footer_signature="mikolaj", font_color="#FFFFFF", dpi=20)
+    gen.generate_map(ROUTE[:2], str(tmp_path / "m.png"))
+    fig = plt.gcf()
+    sig = [a for a in fig.artists if a.get_gid() == "footer-signature"]
+    assert len(sig) == 1
+    xs, ys = sig[0].get_xdata(), sig[0].get_ydata()
+    assert len(xs) == 17  # every vertex of the site's SVG path
+    assert max(xs) < 0.5 and max(ys) < 0.1  # bottom-left corner, figure coordinates
+    assert matplotlib.colors.to_hex(sig[0].get_color()) == "#ffffff"
+
+
+def test_footer_signature_unknown_id_draws_nothing(tmp_path, keep_figure):
+    mg.PosterMapGenerator(footer_signature="nobody", dpi=20).generate_map(ROUTE[:2], str(tmp_path / "m.png"))
+    assert not [a for a in plt.gcf().artists if a.get_gid() == "footer-signature"]
+
+
+def test_footer_signature_reaches_generator_and_form(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_signature": "mikolaj"})
+    assert options["footer_signature"] == "mikolaj"
+    assert 'name="footer_signature"' in (ROOT / "templates" / "index.html").read_text()

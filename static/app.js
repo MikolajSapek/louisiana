@@ -108,6 +108,7 @@ async function submitForm(event) {
         point_edge_color: formData.get('point_edge_color') || undefined,
         repeated_legs: formData.get('repeated_legs') || undefined,
         corner_logo: formData.get('corner_logo') || undefined,
+        footer_signature: formData.get('footer_signature') || undefined,
         curve_strength: formData.get('curve_strength') || undefined,
     };
 

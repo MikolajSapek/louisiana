@@ -99,6 +99,7 @@ def site_link(
     repeated_legs: str | None = None,
     curve_strength: float | None = None,
     corner_logo: str | None = None,
+    footer_signature: str | None = None,
     show_borders: bool | None = None,
     merge_bidirectional_routes: bool | None = None,
     open_in_browser: bool = True,
@@ -112,6 +113,8 @@ def site_link(
     line_style: solid | dashed | dotted | dashdot | dot. line_outline_color: dark edge under the line (rail-map look).
     point_edge_color: ring around city dots. curve_strength: 0 = straight legs (rail-map look), empty = default arcs. repeated_legs: 'double' draws a leg ridden twice as two parallel lines.
     corner_logo (bottom-right): via_yellow, via_yellow_full, via_cream, via_dark, via_dark_full.
+    footer_left: text in the bottom-left corner (newline = stacked lines). footer_signature: 'mikolaj' draws
+      the owner's signature stroke under it.
     Colours as #RRGGBB. Opens the browser unless open_in_browser is false; returns the link.
     """
     if paper_format and paper_format.strip().upper() not in PAPER_FORMATS:
@@ -123,7 +126,7 @@ def site_link(
         "line_style": line_style, "line_color": line_color, "line_outline_color": line_outline_color,
         "line_width": line_width, "point_size": point_size,
         "point_style": point_style, "point_color": point_color, "point_edge_color": point_edge_color,
-        "repeated_legs": repeated_legs, "curve_strength": curve_strength, "corner_logo": corner_logo, "show_borders": show_borders,
+        "repeated_legs": repeated_legs, "curve_strength": curve_strength, "corner_logo": corner_logo, "footer_signature": footer_signature, "show_borders": show_borders,
         "merge_bidirectional_routes": merge_bidirectional_routes,
     })
     if open_in_browser:

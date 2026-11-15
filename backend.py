@@ -341,6 +341,7 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
         "line_outline_color": line_outline_color,
         "point_edge_color": point_edge_color,
         "repeated_legs": repeated_legs,
+        "footer_signature": payload.get("footer_signature") or None,
     }
     if curve_strength is not None:  # absent = each paper format keeps its own default bend
         options["curve_strength"] = curve_strength

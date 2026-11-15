@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+import matplotlib.lines
 import numpy as np
 import requests
 from matplotlib.collections import PolyCollection
@@ -43,6 +44,23 @@ def font_properties(name: Optional[str], bold: bool = False) -> fm.FontPropertie
     if files:
         return fm.FontProperties(fname=str(FONT_DIR / files[1 if bold else 0]))
     return fm.FontProperties(family=[name or "DejaVu Sans", "DejaVu Sans"], weight="bold" if bold else "normal")
+
+
+# Hand signatures drawn as vector strokes (SVG path data, M/L commands only; y grows downward)
+SIGNATURES = {
+    # from the hero of mikolajpawelsapek.eu (viewBox 62 30 548 140)
+    "mikolaj": "M 463 160 L 478 40 L 493 100 L 538 40 L 553 100 L 73 100 L 433 100 L 598 40 L 73 100 "
+               "L 118 40 L 178 40 L 553 100 L 133 100 L 73 100 L 598 40 L 178 40 L 493 100",
+}
+SIGNATURE_BOX = (0.08, 0.022, 0.028)  # left, bottom, height as fractions of the poster
+
+
+def signature_points(path: str) -> np.ndarray:
+    """Vertices of an M/L-only SVG path, flipped so y grows upward."""
+    nums = [float(v) for v in path.replace("M", " ").replace("L", " ").split()]
+    pts = np.array(nums, dtype=float).reshape(-1, 2)
+    pts[:, 1] = -pts[:, 1]
+    return pts
 
 
 DISPLAY_FONTS = {"superclarendon"}  # titles use the heavy face only for display fonts
@@ -154,6 +172,7 @@ class MapGenerator:
         line_outline_color: Optional[str] = None,
         point_edge_color: Optional[str] = None,
         repeated_legs: str = "arcs",
+        footer_signature: Optional[str] = None,
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -200,6 +219,7 @@ class MapGenerator:
         self.point_edge_color = point_edge_color or None
         # arcs: repeated legs as fanned arcs (default); double: parallel lines for a leg ridden more than once
         self.repeated_legs = (repeated_legs or "arcs").lower()
+        self.footer_signature = footer_signature if footer_signature in SIGNATURES else None
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -494,6 +514,7 @@ class MapGenerator:
         
         # Add poster texts (title and footers) if provided
         self._render_text_overlays(ax)
+        self._render_footer_signature(fig)
 
         # Build placed label metadata from current text positions (with overrides applied)
         # Do this AFTER setting margins to zero so bbox is accurate
@@ -810,6 +831,22 @@ class MapGenerator:
                 footer_font_size,
                 ax.transAxes,
             )
+
+    def _render_footer_signature(self, fig) -> None:
+        """Signature stroke in the bottom-left corner, below the left footer text."""
+        if not self.footer_signature:
+            return
+        pts = signature_points(SIGNATURES[self.footer_signature])
+        left, bottom, height = SIGNATURE_BOX
+        span = pts.max(axis=0) - pts.min(axis=0)
+        scale_y = height / span[1]
+        scale_x = scale_y * fig.get_figheight() / fig.get_figwidth()  # keep the drawing's proportions
+        xy = (pts - pts.min(axis=0)) * [scale_x, scale_y] + [left, bottom]
+        height_pt = height * fig.get_figheight() * 72.0
+        fig.add_artist(matplotlib.lines.Line2D(
+            xy[:, 0], xy[:, 1], transform=fig.transFigure, color=self.font_color,
+            linewidth=height_pt * 0.045, solid_capstyle="round", solid_joinstyle="round", gid="footer-signature",
+        ))
 
     def _render_subtitle(self, fig, title_top: Optional[float]) -> None:
         """Second title line (e.g. the place name in another script) right under the poster title."""
