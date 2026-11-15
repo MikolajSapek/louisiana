@@ -291,3 +291,24 @@ def test_corner_logo_keeps_a_proportional_margin(tmp_path):
     b = info["signature"]["box"]
     assert w - (b["x"] + b["width"]) >= 0.035 * w   # clear of the right edge
     assert h - (b["y"] + b["height"]) >= 0.025 * h  # clear of the bottom edge
+
+
+def test_title_and_label_sizes_are_adjustable(tmp_path, keep_figure):
+    gen = mg.PosterMapGenerator(title_text="CHURCHILL", title_font_size=170, label_font_size=40, dpi=20)
+    gen.generate_map(ROUTE[:2], str(tmp_path / "m.png"))
+    fig = plt.gcf()
+    title = [t for t in fig.texts if t.get_text() == "CHURCHILL"][0]
+    label = [t for t in fig.axes[0].texts if t.get_text() == "Gillam"][0]
+    assert title.get_fontsize() == 170 and label.get_fontsize() == 40
+
+
+def test_sizes_from_form_reach_generator(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "title_font_size": "150", "label_font_size": "30"})
+    assert options["title_font_size"] == 150.0 and options["label_font_size"] == 30.0
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "title_font_size": "x"})
+    assert "title_font_size" not in options
+
+
+def test_private_indians_font_registered_but_not_on_site():
+    assert mg.BUNDLED_FONTS["indians"][0].startswith("private/")
+    assert 'value="Indians"' not in (ROOT / "templates" / "index.html").read_text()

@@ -109,6 +109,8 @@ async function submitForm(event) {
         repeated_legs: formData.get('repeated_legs') || undefined,
         corner_logo: formData.get('corner_logo') || undefined,
         footer_signature: formData.get('footer_signature') || undefined,
+        title_font_size: formData.get('title_font_size') || undefined,
+        label_font_size: formData.get('label_font_size') || undefined,
         curve_strength: formData.get('curve_strength') || undefined,
     };
 

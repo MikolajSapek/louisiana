@@ -358,6 +358,12 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
         "repeated_legs": repeated_legs,
         "footer_signature": payload.get("footer_signature") or None,
     }
+    for key in ("title_font_size", "label_font_size"):  # absent = each paper format's default size
+        try:
+            if payload.get(key) not in (None, ""):
+                options[key] = max(6.0, min(float(payload[key]), 400.0))
+        except (TypeError, ValueError):
+            pass
     if curve_strength is not None:  # absent = each paper format keeps its own default bend
         options["curve_strength"] = curve_strength
 

@@ -35,7 +35,8 @@ BUNDLED_FONTS = {
     "superclarendon": ("SuperclarendonBold.ttf", "SuperclarendonBlack.ttf"),
     "rockwell": ("Rockwell.ttf", "RockwellBold.ttf"),
     # private, local-only (fonts/private is git- and vercel-ignored): personal posters, never published
-    "mounties": ("private/Mounties.ttf", "private/Mounties.ttf"),  # closest to the "Mounties" sign lettering
+    "mounties": ("private/Mounties.ttf", "private/Mounties.ttf"),
+    "indians": ("private/Indians.ttf", "private/Indians.ttf"),  # tools/build_indians_font.py  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
 }
 DOUBLE_LINE_GAP = 0.009  # gap between parallel lines of a repeated leg, as a fraction of the map span
@@ -176,6 +177,8 @@ class MapGenerator:
         point_edge_color: Optional[str] = None,
         repeated_legs: str = "arcs",
         footer_signature: Optional[str] = None,
+        title_font_size: Optional[float] = None,
+        label_font_size: Optional[float] = None,
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -223,6 +226,8 @@ class MapGenerator:
         # arcs: repeated legs as fanned arcs (default); double: parallel lines for a leg ridden more than once
         self.repeated_legs = (repeated_legs or "arcs").lower()
         self.footer_signature = footer_signature if footer_signature in SIGNATURES else None
+        self.title_font_size = title_font_size  # None = each format's default (TITLE_FONT_PT)
+        self.label_font_size = label_font_size  # None = each format's default (LABEL_FONT_PT)
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -601,7 +606,7 @@ class MapGenerator:
         # Dla pocztówek użyj mniejszej czcionki
         if self.paper_format == "POSTCARD":
             return 8.0  # Mniejsza czcionka dla pocztówek (10x15 cm)
-        return 11.0
+        return self.label_font_size or 11.0
 
     def _margin_factor_lat(self, lat_span: float) -> float:
         # Dla pocztówek zmniejsz marginesy geograficzne (większy zoom)
@@ -790,7 +795,7 @@ class MapGenerator:
                 self.title_text,
                 ha='center',
                 va='top',
-                fontsize=26,
+                fontsize=self.title_font_size or 26,
                 fontproperties=title_font_properties(font_family),
                 color=font_color,
                 transform=ax.transAxes,
@@ -856,7 +861,7 @@ class MapGenerator:
         """Second title line (e.g. the place name in another script) right under the poster title."""
         if not self.subtitle_text:
             return
-        title_pt = getattr(self, "TITLE_FONT_PT", 26.0)
+        title_pt = self.title_font_size or getattr(self, "TITLE_FONT_PT", 26.0)
         fig_height_pt = fig.get_figheight() * 72.0
         top = (title_top if title_top is not None else 0.965) - (title_pt * 1.25 / fig_height_pt if title_top is not None else 0.0)
         fig.text(
@@ -1373,7 +1378,7 @@ class PosterMapGenerator(MapGenerator):
         self.poster_margin_horizontal = 0.08
 
     def _label_font_size_pt(self) -> float:
-        return self.LABEL_FONT_PT
+        return self.label_font_size or self.LABEL_FONT_PT
 
     @classmethod
     def paper_metadata(cls, dpi: int) -> Dict[str, Any]:
@@ -1410,7 +1415,7 @@ class PosterMapGenerator(MapGenerator):
                 self.title_text,
                 ha='center',
                 va='top',
-                fontsize=self.TITLE_FONT_PT,
+                fontsize=self.title_font_size or self.TITLE_FONT_PT,
                 fontproperties=title_font_properties(font_family),
                 color=font_color,
             )
@@ -1491,7 +1496,7 @@ class LandscapePosterMapGenerator(MapGenerator):
         self.poster_margin_horizontal = 0.06
 
     def _label_font_size_pt(self) -> float:
-        return self.LABEL_FONT_PT
+        return self.label_font_size or self.LABEL_FONT_PT
 
     @classmethod
     def paper_metadata(cls, dpi: int) -> Dict[str, Any]:
@@ -1528,7 +1533,7 @@ class LandscapePosterMapGenerator(MapGenerator):
                 self.title_text,
                 ha='center',
                 va='top',
-                fontsize=self.TITLE_FONT_PT,
+                fontsize=self.title_font_size or self.TITLE_FONT_PT,
                 fontproperties=title_font_properties(font_family),
                 color=font_color,
             )
@@ -1607,7 +1612,7 @@ class LargePosterMapGenerator(MapGenerator):
         self.poster_margin_horizontal = 0.08
 
     def _label_font_size_pt(self) -> float:
-        return self.LABEL_FONT_PT
+        return self.label_font_size or self.LABEL_FONT_PT
 
     @classmethod
     def paper_metadata(cls, dpi: int) -> Dict[str, Any]:
@@ -1644,7 +1649,7 @@ class LargePosterMapGenerator(MapGenerator):
                 self.title_text,
                 ha='center',
                 va='top',
-                fontsize=self.TITLE_FONT_PT,
+                fontsize=self.title_font_size or self.TITLE_FONT_PT,
                 fontproperties=title_font_properties(font_family),
                 color=font_color,
             )
@@ -1723,7 +1728,7 @@ class LandscapeLargePosterMapGenerator(MapGenerator):
         self.poster_margin_horizontal = 0.06
 
     def _label_font_size_pt(self) -> float:
-        return self.LABEL_FONT_PT
+        return self.label_font_size or self.LABEL_FONT_PT
 
     @classmethod
     def paper_metadata(cls, dpi: int) -> Dict[str, Any]:
@@ -1760,7 +1765,7 @@ class LandscapeLargePosterMapGenerator(MapGenerator):
                 self.title_text,
                 ha='center',
                 va='top',
-                fontsize=self.TITLE_FONT_PT,
+                fontsize=self.title_font_size or self.TITLE_FONT_PT,
                 fontproperties=title_font_properties(font_family),
                 color=font_color,
             )

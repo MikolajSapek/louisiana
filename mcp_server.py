@@ -109,6 +109,8 @@ def site_link(
     curve_strength: float | None = None,
     corner_logo: str | None = None,
     footer_signature: str | None = None,
+    title_font_size: float | None = None,
+    label_font_size: float | None = None,
     show_borders: bool | None = None,
     merge_bidirectional_routes: bool | None = None,
     open_in_browser: bool = True,
@@ -140,7 +142,8 @@ def site_link(
         "line_style": line_style, "line_color": line_color, "line_outline_color": line_outline_color,
         "line_width": line_width, "point_size": point_size,
         "point_style": point_style, "point_color": point_color, "point_edge_color": point_edge_color,
-        "repeated_legs": repeated_legs, "curve_strength": curve_strength, "corner_logo": corner_logo, "footer_signature": footer_signature, "show_borders": show_borders,
+        "repeated_legs": repeated_legs, "curve_strength": curve_strength, "corner_logo": corner_logo, "footer_signature": footer_signature,
+        "title_font_size": title_font_size, "label_font_size": label_font_size, "show_borders": show_borders,
         "merge_bidirectional_routes": merge_bidirectional_routes,
     })
     if open_in_browser:
