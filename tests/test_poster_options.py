@@ -281,3 +281,13 @@ def test_coordinate_hint_skips_geocoder(monkeypatch):
     monkeypatch.setattr(backend, "_geocoder", Boom())
     route, warnings = backend._build_route(["The Pas [53.825 -101.241]"])
     assert route == [{"name": "The Pas", "latitude": 53.825, "longitude": -101.241}] and warnings == []
+
+
+def test_corner_logo_keeps_a_proportional_margin(tmp_path):
+    out = tmp_path / "m.png"
+    gen = mg.PosterMapGenerator(dpi=150, signature_enabled=True, signature_path=str(ROOT / "logos" / "via_yellow_full.png"))
+    info = gen.generate_map(ROUTE[:2], str(out))
+    w, h = Image.open(out).size
+    b = info["signature"]["box"]
+    assert w - (b["x"] + b["width"]) >= 0.035 * w   # clear of the right edge
+    assert h - (b["y"] + b["height"]) >= 0.025 * h  # clear of the bottom edge

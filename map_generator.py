@@ -675,7 +675,8 @@ class MapGenerator:
         else:
             # Dla dolnych rogów użyj minimalnego marginesu, aby podpis był w samym rogu
             # Przesuń trochę do góry - zwiększ margines od dołu
-            bottom_offset = corner_margin + 30 if is_corner else int(round(base_height * 0.03)) + 30
+            # proportional, so the corner logo never touches the edge on large posters
+            bottom_offset = int(round(base_height * 0.03))
             dest_y = base_height - target_height - bottom_offset if is_corner else base_height - target_height - bottom_offset
             dest_y = max(0, dest_y)
 
@@ -688,7 +689,7 @@ class MapGenerator:
         else:  # "right" domyślnie
             # Dla prawych rogów przesuń trochę do środka (w lewo)
             # Zamiast być w samym rogu, przesuń w stronę środka
-            offset_from_right = corner_margin_right + 50 if is_corner else margin_x + 50
+            offset_from_right = int(round(base_width * 0.04))
             dest_x = base_width - target_width - offset_from_right if is_corner else base_width - target_width - offset_from_right
 
         base_image.alpha_composite(resized_signature, dest=(dest_x, dest_y))
