@@ -1,6 +1,6 @@
 """Builds fonts/private/Indians.ttf after the "INDIANS" lettering of Ken Lum's "Mounties & Indians" (1989):
-a shadow-only face (the Umbra principle, identified with WhatTheFont): each glyph is the extruded shadow of a
-Gill Sans Bold capital with the letter itself left out. Private, local posters only.
+a shadow-only face (the Umbra principle, identified with WhatTheFont): each glyph is a Futura capital shifted by
+0.08 em right / 0.03 em down, minus the letter itself (see board 2). Private, local posters only.
 
 Usage: python tools/build_indians_font.py   (dev-only dependency: shapely; needs macOS Futura.ttc)
 """
@@ -18,9 +18,10 @@ from shapely import affinity
 from shapely.geometry import Polygon
 from shapely.geometry.polygon import orient
 
-SOURCE = "/System/Library/Fonts/Supplemental/GillSans.ttc"
-FACE = os.environ.get("INDIANS_FACE", "Gill Sans SemiBold")
-SHADOW = tuple(float(v) for v in os.environ.get("INDIANS_SHADOW", "-0.09,-0.07").split(","))  # extrusion (dx, dy), fraction of em
+SOURCE = None  # chosen from FACE below
+FACE = os.environ.get("INDIANS_FACE", "Futura Medium")
+SOURCE = "/System/Library/Fonts/Supplemental/" + ("Futura.ttc" if FACE.startswith("Futura") else "GillSans.ttc")
+SHADOW = tuple(float(v) for v in os.environ.get("INDIANS_SHADOW", "0.08,-0.03").split(","))  # extrusion (dx, dy), fraction of em
 OUT = Path(__file__).resolve().parent.parent / "fonts" / "private" / os.environ.get("INDIANS_OUT", "Indians.ttf")
 CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-–:/&'’ĄĆĘŁŃÓŚŹŻ"
 ANGLES = [32, -38, 41, -30, 36, -42, 28, -34]  # cut directions vary letter to letter, like hand cuts
@@ -88,15 +89,12 @@ def cut(shape, angle_deg, em):
 
 
 def shadow(shape, em):
-    """Extruded shadow (Minkowski sweep along SHADOW) minus the letter itself."""
+    """Umbra principle (board 2): a copy shifted by SHADOW minus the letter; only the shadow is drawn.
+    The 21-degree vector keeps diagonals of N, M, W from vanishing (a 45-degree one would be parallel to them)."""
     if shape.is_empty:
         return shape
-    dx, dy = SHADOW[0] * em, SHADOW[1] * em
-    steps = 24
-    swept = shape
-    for k in range(1, steps + 1):
-        swept = swept.union(affinity.translate(shape, dx * k / steps, dy * k / steps))
-    return swept.buffer(0).difference(shape.buffer(1)).buffer(-1).buffer(1)
+    moved = affinity.translate(shape, SHADOW[0] * em, SHADOW[1] * em)
+    return moved.difference(shape.buffer(1)).buffer(-1).buffer(1)
 
 
 def draw(shape):
