@@ -387,6 +387,10 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
     except (TypeError, ValueError):
         options["dashed_from"] = None
     try:
+        options["footer_line_gap"] = max(0.0, min(float(payload["footer_line_gap"]), 0.3)) if payload.get("footer_line_gap") not in (None, "") else None
+    except (TypeError, ValueError):
+        options["footer_line_gap"] = None
+    try:
         options["footer_y"] = max(0.0, min(float(payload["footer_y"]), 0.5)) if payload.get("footer_y") not in (None, "") else None
     except (TypeError, ValueError):
         options["footer_y"] = None

@@ -10,7 +10,7 @@ SCALE = 6
 YELLOW, RED, CREAM, DARK = "#FFC72C", "#D52B1E", "#F1E6C8", "#1E2A20"
 PRESETS = {  # id: (stripes colour, wordmark colour or None, leaf?)
     "via_yellow": (YELLOW, None, False),
-    "via_yellow_full": (YELLOW, CREAM, True),
+    "via_yellow_full": (YELLOW, "#FFFFFF", True),  # VIA guidelines 2023: on dark backgrounds the name is white
     "via_cream": (CREAM, None, False),
     "via_dark": (DARK, None, False),
     "via_dark_full": (DARK, DARK, False),

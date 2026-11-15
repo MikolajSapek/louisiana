@@ -458,3 +458,19 @@ def test_single_line_footer_sits_on_a_baseline_at_footer_y():
 def test_footer_y_from_form(fake_geocoder):
     _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_y": "0.0342"})
     assert options["footer_y"] == 0.0342
+
+
+def test_multiline_footer_puts_each_line_on_its_own_baseline():
+    gen = mg.PosterMapGenerator(footer_left_text="Paweł, Sofia & Mikołaj\n8–14 listopada 2026", footer_y=0.0302, footer_line_gap=0.018)
+    fig, ax = plt.subplots()
+    gen._render_text_overlays(ax)
+    texts = {t.get_text(): t for t in fig.texts}
+    assert texts["8–14 listopada 2026"].get_position() == (0.04, 0.0302)
+    assert texts["Paweł, Sofia & Mikołaj"].get_position() == (0.04, 0.0482)
+    assert all(texts[k].get_verticalalignment() == "baseline" for k in texts if k[0] in "8P")
+    plt.close(fig)
+
+
+def test_footer_line_gap_from_form(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_line_gap": "0.018"})
+    assert options["footer_line_gap"] == 0.018

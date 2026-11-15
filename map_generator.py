@@ -234,6 +234,7 @@ class MapGenerator:
         water_color: Optional[str] = None,
         include_points: Optional[List[Tuple[float, float]]] = None,
         footer_y: Optional[float] = None,
+        footer_line_gap: Optional[float] = None,
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -296,6 +297,7 @@ class MapGenerator:
         self.water_color = water_color
         self.include_points = [(float(a), float(b)) for a, b in (include_points or [])]  # (lat, lon)
         self.footer_y = footer_y  # footer baseline, fraction of poster height (None = format default)
+        self.footer_line_gap = footer_line_gap  # baseline-to-baseline for stacked footer lines (fraction)
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -1021,6 +1023,13 @@ class MapGenerator:
         font_family = self.footer_font_family or font_family
         if self.footer_y is not None:
             y = self.footer_y
+            if "\n" in text:  # stacked lines, each on its own baseline (bottom line at footer_y)
+                lines = text.split("\n")
+                gap = self.footer_line_gap or font_size * 1.3 / (fig.get_figheight() * 72.0)
+                for k, line in enumerate(reversed(lines)):
+                    fig.text(x, round(y + k * gap, 6), line, ha=ha, va='baseline', fontsize=font_size,
+                             fontproperties=font_properties(font_family, bold=True), color=font_color)
+                return
         if layout == "vertical":
             # Dla układu pionowego, używamy jednego wywołania z linespacing dla lepszego formatowania
             # Renderujemy cały tekst z parametrem linespacing dla lepszych odstępów między liniami
