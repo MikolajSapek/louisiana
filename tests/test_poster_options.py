@@ -261,3 +261,12 @@ def test_mounties_font_is_bundled_caps_only_with_lowercase_mapped():
         assert all(face.get_char_index(ord(c)) for c in text if c != " "), text
     assert face.get_char_index(ord("a")) == face.get_char_index(ord("A"))
     assert (ROOT / "templates" / "index.html").read_text().count('value="Mounties"') == 2  # labels, title/footers
+
+
+def test_coordinate_hint_skips_geocoder(monkeypatch):
+    class Boom:
+        def get_coordinates(self, city):
+            raise AssertionError("geocoder must not be called for pinned coordinates")
+    monkeypatch.setattr(backend, "_geocoder", Boom())
+    route, warnings = backend._build_route(["The Pas [53.825 -101.241]"])
+    assert route == [{"name": "The Pas", "latitude": 53.825, "longitude": -101.241}] and warnings == []

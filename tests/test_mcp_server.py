@@ -64,3 +64,15 @@ def test_site_link_can_skip_browser(monkeypatch):
 def test_check_cities_uses_bracket_hint_for_lookup():
     COORDS["Thompson Manitoba"] = (55.74, -97.86)
     assert mcp_server.check_cities(["Thompson [Manitoba]"])[0]["found"] is True
+
+
+def test_site_link_pins_coordinates_so_the_site_skips_geocoding():
+    url = mcp_server.site_link(["Winnipeg", "Thompson [Manitoba]", "Nowhere"])
+    COORDS["Thompson Manitoba"] = (55.74, -97.86)
+    url = mcp_server.site_link(["Winnipeg", "Thompson [Manitoba]", "Nowhere"])
+    assert _decode(url)["cities"] == "Winnipeg [49.9 -97.14]\nThompson [55.74 -97.86]\nNowhere"
+
+
+def test_site_link_can_leave_geocoding_to_the_site():
+    url = mcp_server.site_link(["Winnipeg"], pin_coordinates=False)
+    assert _decode(url)["cities"] == "Winnipeg"

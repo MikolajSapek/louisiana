@@ -77,6 +77,7 @@ def _parse_bool(value: Any) -> bool:
 
 
 HINT_RE = re.compile(r"\[([^\]]*)\]")
+COORD_HINT_RE = re.compile(r"\[\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\]")  # [lat lon], no comma (commas split cities)
 
 
 def _split_label_hint(entry: str) -> tuple[str, str]:
@@ -93,7 +94,9 @@ def _build_route(cities: List[str]) -> tuple[List[Dict[str, Any]], List[str]]:
 
     for city in cities:
         label, query = _split_label_hint(city)
-        coords = geocoder.get_coordinates(query)
+        pinned = COORD_HINT_RE.search(city)
+        # Pinned coordinates skip the geocoder (Nominatim throttles shared server IPs and points went missing)
+        coords = (float(pinned.group(1)), float(pinned.group(2))) if pinned else geocoder.get_coordinates(query)
         if coords:
             lat, lon = coords
             route.append({

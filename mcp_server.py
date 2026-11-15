@@ -60,6 +60,14 @@ def check_cities(cities: list[str]) -> list[dict[str, Any]]:
     return results
 
 
+def _pin(city: str) -> str:
+    """'Thompson [Manitoba]' -> 'Thompson [55.74 -97.86]' using the same lookup as the site."""
+    label, query = backend._split_label_hint(city)
+    with contextlib.redirect_stdout(sys.stderr):  # stdout is the MCP channel; geocoder prints errors
+        coords = backend.get_geocoder().get_coordinates(query)
+    return f"{label} [{coords[0]:.6g} {coords[1]:.6g}]" if coords else city
+
+
 def _open_browser(url: str) -> None:
     """Open the project on the site so the user can adjust it by hand."""
     try:
@@ -104,6 +112,7 @@ def site_link(
     show_borders: bool | None = None,
     merge_bidirectional_routes: bool | None = None,
     open_in_browser: bool = True,
+    pin_coordinates: bool = True,
 ) -> str:
     """Open this project on louisiana.vercel.app: the form is filled in and the site draws the poster.
 
@@ -117,7 +126,11 @@ def site_link(
     footer_left: text in the bottom-left corner (newline = stacked lines). footer_signature: 'mikolaj' draws
       the owner's signature stroke under it.
     Colours as #RRGGBB. Opens the browser unless open_in_browser is false; returns the link.
+    pin_coordinates: look cities up here and send them as 'Name [lat lon]' so the site never geocodes
+      (its shared server IP gets throttled and towns go missing). Unfound cities are sent as typed.
     """
+    if pin_coordinates:
+        cities = [_pin(city) for city in cities]
     if paper_format and paper_format.strip().upper() not in PAPER_FORMATS:
         raise ValueError(f"Unknown paper_format {paper_format!r}; use one of {', '.join(PAPER_FORMATS)}.")
     url = _encode_link({
