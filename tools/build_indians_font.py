@@ -117,7 +117,11 @@ def draw(shape):
 
 
 def build():
-    src = next(f for f in TTCollection(SOURCE).fonts if f["name"].getDebugName(4) == FACE)
+    if os.environ.get("INDIANS_SOURCE"):  # any single TTF/OTF file as the base (e.g. a Canadian typeface)
+        from fontTools.ttLib import TTFont
+        src = TTFont(os.environ["INDIANS_SOURCE"])
+    else:
+        src = next(f for f in TTCollection(SOURCE).fonts if f["name"].getDebugName(4) == FACE)
     em = src["head"].unitsPerEm
     cmap_src, hmtx = src.getBestCmap(), src["hmtx"]
     glyphs, metrics, cmap = {}, {}, {ord(" "): "space"}

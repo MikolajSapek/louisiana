@@ -40,6 +40,13 @@ BUNDLED_FONTS = {
     "indians bold": ("private/IndiansBold.ttf", "private/IndiansBold.ttf"),  # INDIANS_FACE="Futura Bold"
     "indians outline": ("private/IndiansOutline.ttf", "private/IndiansOutline.ttf"),  # + INDIANS_OUTLINE=0.018
     "indians bold outline": ("private/IndiansBoldOutline.ttf", "private/IndiansBoldOutline.ttf"),  # most readable
+    # Canadian typefaces (private copies): Canada 1500 = public-domain Canada 150 face by Ray Larabie,
+    # Aboriginal Sans/Serif = Chris Harvey (languagegeek) for Cree, Ojibwe, Dene; "shadow" = Indians treatment
+    "canada 1500": ("private/canada1500-rg.ttf", "private/canada1500-bd.ttf"),
+    "canada 1500 shadow": ("private/Canada1500Shadow.ttf", "private/Canada1500Shadow.ttf"),
+    "aboriginal sans": ("private/AboriginalSansBOLD.ttf", "private/AboriginalSansBOLD.ttf"),
+    "aboriginal sans shadow": ("private/AboriginalSansShadow.ttf", "private/AboriginalSansShadow.ttf"),
+    "aboriginal serif": ("private/AboriginalSerifBOLD.ttf", "private/AboriginalSerifBOLD.ttf"),
     "north railway": ("private/NorthRailway-DEMO.ttf", "private/NorthRailway-DEMO.ttf"),  # demo: A-Z only, private use
     "north railway pl": ("private/NorthRailwayPL.ttf", "private/NorthRailwayPL.ttf"),  # + digits, Ł/ł (tools/build_northrailway_pl.py)  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
