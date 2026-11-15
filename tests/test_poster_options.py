@@ -222,3 +222,8 @@ def test_server_assets_live_outside_static():
     assert "static" not in backend.LOGO_DIR.relative_to(ROOT).parts
     assert "static" not in mg.FONT_DIR.relative_to(ROOT).parts
     assert backend.LOGO_PRESETS == {"via_yellow", "via_yellow_full", "via_cream", "via_dark", "via_dark_full"}
+
+
+def test_vercelignore_keeps_logo_pngs():
+    # .vercelignore drops *.png; without this exception the corner logo silently disappears on Vercel
+    assert "!logos/*.png" in (ROOT / ".vercelignore").read_text().splitlines()

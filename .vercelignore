@@ -21,3 +21,6 @@ route.json
 route_a3.png
 route_map.png
 
+
+# corner logos are read by the server (backend.LOGO_DIR)
+!logos/*.png
