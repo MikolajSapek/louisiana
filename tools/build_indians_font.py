@@ -1,5 +1,6 @@
-"""Builds fonts/private/Indians.ttf: Futura Bold capitals cut by a diagonal slit with the pieces nudged apart,
-after the "INDIANS" lettering of Ken Lum's "Mounties & Indians" (1989). Private, local posters only.
+"""Builds fonts/private/Indians.ttf after the "INDIANS" lettering of Ken Lum's "Mounties & Indians" (1989):
+a shadow-only face (the Umbra principle, identified with WhatTheFont): each glyph is the extruded shadow of a
+Gill Sans Bold capital with the letter itself left out. Private, local posters only.
 
 Usage: python tools/build_indians_font.py   (dev-only dependency: shapely; needs macOS Futura.ttc)
 """
@@ -16,8 +17,9 @@ from shapely import affinity
 from shapely.geometry import Polygon
 from shapely.geometry.polygon import orient
 
-SOURCE = "/System/Library/Fonts/Supplemental/Futura.ttc"
-FACE = "Futura Bold"
+SOURCE = "/System/Library/Fonts/Supplemental/GillSans.ttc"
+FACE = "Gill Sans Bold"
+SHADOW = (0.16, -0.11)  # extrusion direction and length, fraction of em (down-right)
 OUT = Path(__file__).resolve().parent.parent / "fonts" / "private" / "Indians.ttf"
 CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-–:/&'’ĄĆĘŁŃÓŚŹŻ"
 ANGLES = [32, -38, 41, -30, 36, -42, 28, -34]  # cut directions vary letter to letter, like hand cuts
@@ -84,6 +86,18 @@ def cut(shape, angle_deg, em):
     return top.union(shape.intersection(lower)).buffer(0)
 
 
+def shadow(shape, em):
+    """Extruded shadow (Minkowski sweep along SHADOW) minus the letter itself."""
+    if shape.is_empty:
+        return shape
+    dx, dy = SHADOW[0] * em, SHADOW[1] * em
+    steps = 24
+    swept = shape
+    for k in range(1, steps + 1):
+        swept = swept.union(affinity.translate(shape, dx * k / steps, dy * k / steps))
+    return swept.buffer(0).difference(shape.buffer(1)).buffer(-1).buffer(1)
+
+
 def draw(shape):
     pen = TTGlyphPen(None)
     for g in getattr(shape, "geoms", [shape]):
@@ -108,7 +122,7 @@ def build():
         name = cmap_src.get(ord(ch))
         if name is None:
             continue
-        shape = cut(glyph_shape(src, name), ANGLES[i % len(ANGLES)], em) if ch.isalnum() else glyph_shape(src, name)
+        shape = shadow(glyph_shape(src, name), em)
         gname = f"g{ord(ch):04X}"
         glyphs[gname] = draw(shape)
         metrics[gname] = (hmtx[name][0], int(shape.bounds[0]) if not shape.is_empty else 0)

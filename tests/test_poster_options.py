@@ -312,3 +312,21 @@ def test_sizes_from_form_reach_generator(fake_geocoder):
 def test_private_indians_font_registered_but_not_on_site():
     assert mg.BUNDLED_FONTS["indians"][0].startswith("private/")
     assert 'value="Indians"' not in (ROOT / "templates" / "index.html").read_text()
+
+
+def test_title_subtitle_and_label_colours_are_separate(tmp_path, keep_figure):
+    gen = mg.PosterMapGenerator(title_text="CHURCHILL", subtitle_text="ᑯᒡᔪᐊᖅ", font_color="#ffffff",
+                                title_color="#f2c21b", subtitle_color="#f4f1e8", label_color="#a8a39a", dpi=20)
+    gen.generate_map(ROUTE[:2], str(tmp_path / "m.png"))
+    fig = plt.gcf()
+    colour = lambda t: matplotlib.colors.to_hex(t.get_color())
+    texts = {t.get_text(): colour(t) for t in fig.texts}
+    assert texts["CHURCHILL"] == "#f2c21b" and texts["ᑯᒡᔪᐊᖅ"] == "#f4f1e8"
+    assert colour([t for t in fig.axes[0].texts if t.get_text() == "Gillam"][0]) == "#a8a39a"
+
+
+def test_colours_fall_back_to_font_colour_and_reach_generator(fake_geocoder):
+    gen = mg.PosterMapGenerator(font_color="#123456")
+    assert gen.title_color == gen.subtitle_color == gen.label_color == "#123456"
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "title_color": "#F2C21B", "label_color": "nope"})
+    assert options["title_color"] == "#F2C21B" and options["label_color"] is None

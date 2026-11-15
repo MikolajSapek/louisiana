@@ -179,6 +179,9 @@ class MapGenerator:
         footer_signature: Optional[str] = None,
         title_font_size: Optional[float] = None,
         label_font_size: Optional[float] = None,
+        title_color: Optional[str] = None,
+        subtitle_color: Optional[str] = None,
+        label_color: Optional[str] = None,
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -228,6 +231,10 @@ class MapGenerator:
         self.footer_signature = footer_signature if footer_signature in SIGNATURES else None
         self.title_font_size = title_font_size  # None = each format's default (TITLE_FONT_PT)
         self.label_font_size = label_font_size  # None = each format's default (LABEL_FONT_PT)
+        # separate colours (e.g. the sign: yellow title, white subtitle, silver-grey places); default = font_color
+        self.title_color = title_color or font_color
+        self.subtitle_color = subtitle_color or font_color
+        self.label_color = label_color or font_color
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -479,7 +486,7 @@ class MapGenerator:
                 va="bottom",
                 fontproperties=label_font,
                 fontsize=label_font_pt,
-                color=self.font_color,
+                color=self.label_color,
                 zorder=8,
                 clip_on=False,  # Don't clip labels - allow them to be visible
                 bbox=None,  # Wyłącz bbox - nie chcemy prostokątów przy etykietach
@@ -797,7 +804,7 @@ class MapGenerator:
                 va='top',
                 fontsize=self.title_font_size or 26,
                 fontproperties=title_font_properties(font_family),
-                color=font_color,
+                color=self.title_color,
                 transform=ax.transAxes,
             )
 
@@ -872,7 +879,7 @@ class MapGenerator:
             va='top',
             fontsize=title_pt * 0.5,
             fontproperties=font_properties(self.subtitle_font_family, bold=True),
-            color=self.font_color,
+            color=self.subtitle_color,
         )
 
     def _detect_footer_layout(self, text: Optional[str]) -> str:
@@ -1417,7 +1424,7 @@ class PosterMapGenerator(MapGenerator):
                 va='top',
                 fontsize=self.title_font_size or self.TITLE_FONT_PT,
                 fontproperties=title_font_properties(font_family),
-                color=font_color,
+                color=self.title_color,
             )
         self._render_subtitle(fig, 0.965 if self.title_text else None)
 
@@ -1535,7 +1542,7 @@ class LandscapePosterMapGenerator(MapGenerator):
                 va='top',
                 fontsize=self.title_font_size or self.TITLE_FONT_PT,
                 fontproperties=title_font_properties(font_family),
-                color=font_color,
+                color=self.title_color,
             )
         self._render_subtitle(fig, 0.93 if self.title_text else None)
 
@@ -1651,7 +1658,7 @@ class LargePosterMapGenerator(MapGenerator):
                 va='top',
                 fontsize=self.title_font_size or self.TITLE_FONT_PT,
                 fontproperties=title_font_properties(font_family),
-                color=font_color,
+                color=self.title_color,
             )
         self._render_subtitle(fig, 0.965 if self.title_text else None)
 
@@ -1767,7 +1774,7 @@ class LandscapeLargePosterMapGenerator(MapGenerator):
                 va='top',
                 fontsize=self.title_font_size or self.TITLE_FONT_PT,
                 fontproperties=title_font_properties(font_family),
-                color=font_color,
+                color=self.title_color,
             )
         self._render_subtitle(fig, 0.93 if self.title_text else None)
 

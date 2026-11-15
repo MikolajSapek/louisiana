@@ -110,6 +110,9 @@ async function submitForm(event) {
         corner_logo: formData.get('corner_logo') || undefined,
         footer_signature: formData.get('footer_signature') || undefined,
         title_font_size: formData.get('title_font_size') || undefined,
+        title_color: formData.get('title_color') || undefined,
+        subtitle_color: formData.get('subtitle_color') || undefined,
+        label_color: formData.get('label_color') || undefined,
         label_font_size: formData.get('label_font_size') || undefined,
         curve_strength: formData.get('curve_strength') || undefined,
     };
