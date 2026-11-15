@@ -27,7 +27,8 @@ server = MCPServer(
     instructions=(
         "Route poster generator at louisiana.vercel.app. Use site_link to open a project on the site; "
         "never render posters locally. Cities are labelled exactly as typed. No commas inside a city name; "
-        "add a region without a comma when a name is ambiguous (e.g. 'Bird Manitoba'). Run check_cities first "
+        "add a region in square brackets when a name is ambiguous: 'Bird [Manitoba]' is found in Manitoba but labelled "
+        "'Bird'. Run check_cities first "
         "for unusual names. A leg ridden twice shows as a double line only if the return trip lists the same "
         "stops in reverse order (repeated_legs='double')."
     ),
@@ -50,7 +51,7 @@ def check_cities(cities: list[str]) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
     for city in cities:
         with contextlib.redirect_stdout(sys.stderr):  # stdout is the MCP channel; geocoder prints errors
-            coords = geocoder.get_coordinates(city)
+            coords = geocoder.get_coordinates(backend._split_label_hint(city)[1])
         if coords is None:
             results.append({"city": city, "found": False})
             continue
@@ -107,7 +108,7 @@ def site_link(
     """Open this project on louisiana.vercel.app: the form is filled in and the site draws the poster.
 
     paper_format: POSTER_50X70 (portrait, default), POSTER_70X50, POSTER_60X100, POSTER_100X60, POSTCARD.
-    font (city labels) / text_font (title, footers) / subtitle_font: Helvetica, Helvetica Regular, Superclarendon, Euphemia UCAS
+    font (city labels) / text_font (title, footers) / subtitle_font: Helvetica, Helvetica Regular, Superclarendon, Rockwell, Euphemia UCAS
       (bundled, same everywhere) or Arial, Futura, Avenir, Montserrat, Baskerville, Garamond, Roboto.
     subtitle: second title line, e.g. the name in Inuktitut syllabics (use subtitle_font 'Euphemia UCAS').
     line_style: solid | dashed | dotted | dashdot | dot. line_outline_color: dark edge under the line (rail-map look).

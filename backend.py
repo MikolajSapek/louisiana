@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
@@ -75,17 +76,28 @@ def _parse_bool(value: Any) -> bool:
     return False
 
 
+HINT_RE = re.compile(r"\[([^\]]*)\]")
+
+
+def _split_label_hint(entry: str) -> tuple[str, str]:
+    """'Bird [Manitoba]' -> label 'Bird', geocoding query 'Bird Manitoba' (the hint is never printed)."""
+    label = " ".join(HINT_RE.sub(" ", entry).split())
+    query = " ".join(HINT_RE.sub(r" \1 ", entry).split())
+    return label or query, query
+
+
 def _build_route(cities: List[str]) -> tuple[List[Dict[str, Any]], List[str]]:
     route: List[Dict[str, Any]] = []
     warnings: List[str] = []
     geocoder = get_geocoder()
 
     for city in cities:
-        coords = geocoder.get_coordinates(city)
+        label, query = _split_label_hint(city)
+        coords = geocoder.get_coordinates(query)
         if coords:
             lat, lon = coords
             route.append({
-                "name": city,
+                "name": label,
                 "latitude": lat,
                 "longitude": lon,
             })

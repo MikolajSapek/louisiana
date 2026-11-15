@@ -227,3 +227,27 @@ def test_server_assets_live_outside_static():
 def test_vercelignore_keeps_logo_pngs():
     # .vercelignore drops *.png; without this exception the corner logo silently disappears on Vercel
     assert "!logos/*.png" in (ROOT / ".vercelignore").read_text().splitlines()
+
+
+def test_rockwell_bundled_heavy_for_titles_and_in_form():
+    assert Path(mg.font_properties("Rockwell").get_file()).name == "Rockwell.ttf"
+    assert Path(mg.title_font_properties("Rockwell").get_file()).name == "RockwellBold.ttf"
+    html = (ROOT / "templates" / "index.html").read_text()
+    assert html.count('value="Rockwell"') == 3  # labels, title/footers, subtitle
+
+
+def test_footer_signature_is_small():
+    assert mg.SIGNATURE_BOX[2] <= 0.012
+
+
+def test_bracketed_hint_geocodes_but_is_not_printed(monkeypatch):
+    queries = []
+
+    class Recorder:
+        def get_coordinates(self, city):
+            queries.append(city)
+            return (56.5, -94.2)
+    monkeypatch.setattr(backend, "_geocoder", Recorder())
+    route, warnings = backend._build_route(["Bird [Manitoba]", "Gillam"])
+    assert queries == ["Bird Manitoba", "Gillam"]
+    assert [p["name"] for p in route] == ["Bird", "Gillam"]

@@ -33,6 +33,7 @@ BUNDLED_FONTS = {
     "helvetica": ("Helvetica.ttf", "HelveticaBold.ttf"),
     "helvetica regular": ("Helvetica.ttf", "Helvetica.ttf"),  # CN "Piggyback" lettering: never bold
     "superclarendon": ("SuperclarendonBold.ttf", "SuperclarendonBlack.ttf"),
+    "rockwell": ("Rockwell.ttf", "RockwellBold.ttf"),  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
 }
 DOUBLE_LINE_GAP = 0.009  # gap between parallel lines of a repeated leg, as a fraction of the map span
@@ -52,7 +53,7 @@ SIGNATURES = {
     "mikolaj": "M 463 160 L 478 40 L 493 100 L 538 40 L 553 100 L 73 100 L 433 100 L 598 40 L 73 100 "
                "L 118 40 L 178 40 L 553 100 L 133 100 L 73 100 L 598 40 L 178 40 L 493 100",
 }
-SIGNATURE_BOX = (0.08, 0.022, 0.028)  # left, bottom, height as fractions of the poster
+SIGNATURE_BOX = (0.08, 0.03, 0.012)  # left, bottom, height as fractions of the poster
 
 
 def signature_points(path: str) -> np.ndarray:
@@ -63,7 +64,7 @@ def signature_points(path: str) -> np.ndarray:
     return pts
 
 
-DISPLAY_FONTS = {"superclarendon"}  # titles use the heavy face only for display fonts
+DISPLAY_FONTS = {"superclarendon", "rockwell"}  # titles use the heavy face only for display fonts
 
 
 def title_font_properties(name: Optional[str]) -> fm.FontProperties:

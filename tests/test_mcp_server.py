@@ -59,3 +59,8 @@ def test_site_link_can_skip_browser(monkeypatch):
     monkeypatch.setattr(mcp_server, "_open_browser", opened.append)
     mcp_server.site_link(["Winnipeg"], open_in_browser=False)
     assert opened == []
+
+
+def test_check_cities_uses_bracket_hint_for_lookup():
+    COORDS["Thompson Manitoba"] = (55.74, -97.86)
+    assert mcp_server.check_cities(["Thompson [Manitoba]"])[0]["found"] is True
