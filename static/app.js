@@ -372,7 +372,10 @@ function renderLabelOverlay() {
     const scaleY = height / figHeight;
 
     const labelFontPxBase = Number(currentStyle?.label_font_size_px ?? 24);
-    const labelFontFamily = currentStyle?.font_family || 'Helvetica, Arial, sans-serif';
+    // "Helvetica Regular" is a weight choice of Helvetica, not a CSS family name
+    const labelFontFamily = currentStyle?.font_family
+        ? `"${currentStyle.font_family.replace(/ Regular$/, '')}", Helvetica, Arial, sans-serif`
+        : 'Helvetica, Arial, sans-serif';
     const labelFontColor = currentStyle?.font_color || '#ffffff';
     const backgroundColor = currentMapInfo?.style?.background_color || currentMapInfo?.background_color || '#0a3dbb';
 
@@ -430,6 +433,9 @@ function renderLabelOverlay() {
         item.style.top = `${anchorY * scaleYDisplay}px`;
         item.style.fontSize = `${labelFontPxBase * scaleYDisplay}px`;
         item.style.fontFamily = labelFontFamily;
+        if (/ Regular$/.test(currentStyle?.font_family || '')) {
+            item.style.fontWeight = '400'; // match the regular face the server renders
+        }
         item.style.color = labelFontColor;
 
         if (isHidden) {

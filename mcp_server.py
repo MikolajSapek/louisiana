@@ -106,7 +106,7 @@ def site_link(
     """Open this project on louisiana.vercel.app: the form is filled in and the site draws the poster.
 
     paper_format: POSTER_50X70 (portrait, default), POSTER_70X50, POSTER_60X100, POSTER_100X60, POSTCARD.
-    font (city labels) / text_font (title, footers) / subtitle_font: Helvetica, Superclarendon, Euphemia UCAS
+    font (city labels) / text_font (title, footers) / subtitle_font: Helvetica, Helvetica Regular, Superclarendon, Euphemia UCAS
       (bundled, same everywhere) or Arial, Futura, Avenir, Montserrat, Baskerville, Garamond, Roboto.
     subtitle: second title line, e.g. the name in Inuktitut syllabics (use subtitle_font 'Euphemia UCAS').
     line_style: solid | dashed | dotted | dashdot | dot. line_outline_color: dark edge under the line (rail-map look).

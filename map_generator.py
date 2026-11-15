@@ -30,6 +30,7 @@ FONT_DIR = BASE_DIR / "fonts"
 # Fonts shipped with the repo (font choice -> regular file, bold file). Lookup is case-insensitive.
 BUNDLED_FONTS = {
     "helvetica": ("Helvetica.ttf", "HelveticaBold.ttf"),
+    "helvetica regular": ("Helvetica.ttf", "Helvetica.ttf"),  # CN "Piggyback" lettering: never bold
     "superclarendon": ("SuperclarendonBold.ttf", "SuperclarendonBlack.ttf"),
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
 }

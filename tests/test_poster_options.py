@@ -186,3 +186,9 @@ def test_default_title_keeps_regular_weight_heavy_only_for_display_font():
     files = {t.get_text(): Path(t.get_fontproperties().get_file()).name for t in fig.texts}
     assert files == {"Plain": "Helvetica.ttf", "Heavy": "SuperclarendonBlack.ttf"}
     plt.close(fig)
+
+
+def test_helvetica_regular_choice_keeps_regular_face_for_labels():
+    assert Path(mg.font_properties("Helvetica Regular", bold=True).get_file()).name == "Helvetica.ttf"
+    html = (ROOT / "templates" / "index.html").read_text()
+    assert 'value="Helvetica Regular"' in html
