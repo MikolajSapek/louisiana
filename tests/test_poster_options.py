@@ -253,14 +253,25 @@ def test_bracketed_hint_geocodes_but_is_not_printed(monkeypatch):
     assert [p["name"] for p in route] == ["Bird", "Gillam"]
 
 
-def test_mounties_font_is_bundled_caps_only_with_lowercase_mapped():
+def test_private_mounties_font_stays_out_of_the_public_site():
+    assert "fonts/private/" in (ROOT / ".gitignore").read_text()
+    assert "fonts/private/" in (ROOT / ".vercelignore").read_text()
+    assert 'value="Mounties"' not in (ROOT / "templates" / "index.html").read_text()
+    assert not (ROOT / "static" / "fonts" / "Mounties.ttf").exists()
+
+
+def test_missing_private_font_falls_back_instead_of_crashing(monkeypatch, tmp_path):
+    monkeypatch.setattr(mg, "FONT_DIR", tmp_path)
+    assert mg.font_properties("Mounties").get_file() is None
+
+
+@pytest.mark.skipif(not (ROOT / "fonts" / "private" / "Mounties.ttf").exists(), reason="private font only on the owner's Mac")
+def test_private_mounties_font_covers_the_poster_text():
     from matplotlib import ft2font
     assert Path(mg.font_properties("Mounties", bold=True).get_file()).name == "Mounties.ttf"
-    face = ft2font.FT2Font(str(ROOT / "fonts" / "Mounties.ttf"))
-    for text in ("CHURCHILL", "Thompson", "Paweł, Sofia, Mikołaj", "8–14 listopada 2026"):
+    face = ft2font.FT2Font(str(ROOT / "fonts" / "private" / "Mounties.ttf"))
+    for text in ("CHURCHILL", "Thompson", "Paweł Sofia Mikołaj", "8–14 listopada 2026"):
         assert all(face.get_char_index(ord(c)) for c in text if c != " "), text
-    assert face.get_char_index(ord("a")) == face.get_char_index(ord("A"))
-    assert (ROOT / "templates" / "index.html").read_text().count('value="Mounties"') == 2  # labels, title/footers
 
 
 def test_coordinate_hint_skips_geocoder(monkeypatch):

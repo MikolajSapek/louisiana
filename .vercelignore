@@ -24,3 +24,6 @@ route_map.png
 
 # corner logos are read by the server (backend.LOGO_DIR)
 !logos/*.png
+
+# private fonts: local posters only
+fonts/private/

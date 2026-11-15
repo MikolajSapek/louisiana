@@ -34,7 +34,8 @@ BUNDLED_FONTS = {
     "helvetica regular": ("Helvetica.ttf", "Helvetica.ttf"),  # CN "Piggyback" lettering: never bold
     "superclarendon": ("SuperclarendonBold.ttf", "SuperclarendonBlack.ttf"),
     "rockwell": ("Rockwell.ttf", "RockwellBold.ttf"),
-    "mounties": ("Mounties.ttf", "Mounties.ttf"),  # own caps-only font after the "MOUNTIES" sign (tools/build_mounties_font.py)  # closest to the "Mounties" sign lettering
+    # private, local-only (fonts/private is git- and vercel-ignored): personal posters, never published
+    "mounties": ("private/Mounties.ttf", "private/Mounties.ttf"),  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
 }
 DOUBLE_LINE_GAP = 0.009  # gap between parallel lines of a repeated leg, as a fraction of the map span
@@ -43,7 +44,7 @@ DOUBLE_LINE_GAP = 0.009  # gap between parallel lines of a repeated leg, as a fr
 def font_properties(name: Optional[str], bold: bool = False) -> fm.FontProperties:
     """Font for a form choice: the bundled file when we ship it (same on Mac and Vercel), else the family name."""
     files = BUNDLED_FONTS.get((name or "").strip().lower())
-    if files:
+    if files and (FONT_DIR / files[1 if bold else 0]).exists():
         return fm.FontProperties(fname=str(FONT_DIR / files[1 if bold else 0]))
     return fm.FontProperties(family=[name or "DejaVu Sans", "DejaVu Sans"], weight="bold" if bold else "normal")
 

@@ -15,7 +15,7 @@ from shapely.geometry import LineString, Point, Polygon, box
 from shapely.geometry.polygon import orient
 from shapely.ops import unary_union
 
-OUT = Path(__file__).resolve().parent.parent / "fonts" / "Mounties.ttf"
+OUT = Path(__file__).resolve().parent.parent / "fonts" / "private" / "Mounties.ttf"  # private: never published
 UPM, CAP = 1000, 700
 S = 172    # stem width
 T = 138    # horizontal stroke
@@ -412,9 +412,6 @@ def build():
     fb.setupPost()
     OUT.parent.mkdir(parents=True, exist_ok=True)
     fb.save(str(OUT))
-    web_copy = OUT.parent.parent / "static" / "fonts" / OUT.name  # same file for the page's draggable labels
-    web_copy.parent.mkdir(parents=True, exist_ok=True)
-    web_copy.write_bytes(OUT.read_bytes())
     print(f"wrote {OUT} with {len(glyphs)} glyphs")
 
 

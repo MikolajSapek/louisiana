@@ -765,6 +765,9 @@ function applyProjectToForm(project) {
         if (!field || value === null || value === undefined) return;
         if (field.type === 'checkbox') {
             field.checked = Boolean(value);
+        } else if (field.tagName === 'SELECT' && ![...field.options].some((o) => o.value === String(value))) {
+            // e.g. a private font that only a local copy of the site has: keep the link's choice
+            field.add(new Option(String(value), String(value), true, true));
         } else {
             field.value = Array.isArray(value) ? value.join('\n') : String(value);
         }

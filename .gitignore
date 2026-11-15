@@ -38,3 +38,6 @@ preview_server.log
 !tools/via_source.jpg
 .vercel
 .env*.local
+
+# private fonts: local posters only, never published
+fonts/private/
