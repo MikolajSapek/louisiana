@@ -113,6 +113,62 @@ def serve_map(filename: str):
     return send_from_directory(str(MAP_STORAGE_DIR), filename, mimetype="image/png")
 
 
+PREVIEW_GLOB = "map_final_mcp_*.png"  # posters made from the terminal (mcp_server.py)
+
+PREVIEW_PAGE = """<!doctype html>
+<html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Podgląd plakatu</title>
+<style>
+:root { --bg: #f4f4f2; --fg: #1a1a1a; --muted: #5c5c5c; }
+@media (prefers-color-scheme: dark) { :root { --bg: #141414; --fg: #f2f2f2; --muted: #a8a8a8; } }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+main { max-width: 900px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 20px; margin: 8px 0; }
+p { color: var(--muted); margin: 0 0 16px; }
+img { display: block; max-width: 100%; max-height: 85vh; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+a { color: inherit; }
+</style></head>
+<body><main>
+<h1>Podgląd plakatu</h1>
+<p id="status" aria-live="polite">Czekam na plakat z terminala…</p>
+<img id="poster" alt="Ostatni wygenerowany plakat trasy" hidden>
+</main>
+<script>
+let current = null;
+async function refresh() {
+  try {
+    const data = await (await fetch("/api/preview/latest", {cache: "no-store"})).json();
+    if (!data.file || data.file === current) return;
+    current = data.file;
+    const img = document.getElementById("poster");
+    img.src = data.url; img.hidden = false;
+    document.getElementById("status").innerHTML =
+      `Ostatni plakat: ${new Date(data.mtime * 1000).toLocaleString("pl-PL")} · <a href="${data.url}" download>pobierz PNG</a>`;
+  } catch (e) { document.getElementById("status").textContent = "Brak połączenia z serwerem."; }
+}
+refresh(); setInterval(refresh, 2000);
+</script></body></html>"""
+
+
+@app.get("/preview")
+def preview_page() -> str:
+    return PREVIEW_PAGE
+
+
+@app.get("/api/preview/latest")
+def preview_latest() -> Any:
+    files = sorted(MAP_STORAGE_DIR.glob(PREVIEW_GLOB), key=lambda p: p.stat().st_mtime)
+    if not files:
+        return jsonify({"file": None})
+    latest = files[-1]
+    return jsonify({
+        "file": latest.name,
+        "url": url_for("serve_map", filename=latest.name),
+        "mtime": latest.stat().st_mtime,
+    })
+
+
 @app.post("/api/generate")
 def generate_map() -> Any:
     if request.is_json:

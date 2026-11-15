@@ -30,3 +30,5 @@ Thumbs.db
 
 
 
+.venv.broken/
+preview_server.log

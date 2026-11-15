@@ -728,3 +728,39 @@ if (downloadButton) {
         }
     });
 }
+
+// Project link from the terminal (mcp_server.py site_link): #p=<base64url JSON>.
+// Fills the form with the project and generates the poster once.
+function decodeProjectHash(hash) {
+    const match = /(?:^#|&)p=([^&]+)/.exec(hash || '');
+    if (!match) return null;
+    try {
+        const b64 = match[1].replace(/-/g, '+').replace(/_/g, '/');
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        const project = JSON.parse(new TextDecoder().decode(bytes));
+        return project && typeof project === 'object' ? project : null;
+    } catch (error) {
+        console.warn('Nie udało się odczytać projektu z linku:', error);
+        return null;
+    }
+}
+
+function applyProjectToForm(project) {
+    Object.entries(project).forEach(([name, value]) => {
+        const field = form.elements.namedItem(name);
+        if (!field || value === null || value === undefined) return;
+        if (field.type === 'checkbox') {
+            field.checked = Boolean(value);
+        } else {
+            field.value = Array.isArray(value) ? value.join('\n') : String(value);
+        }
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+}
+
+(function loadProjectFromLink() {
+    const project = decodeProjectHash(window.location.hash);
+    if (!project) return;
+    applyProjectToForm(project);
+    form.requestSubmit();
+})();
