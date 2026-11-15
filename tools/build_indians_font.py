@@ -7,6 +7,7 @@ Usage: python tools/build_indians_font.py   (dev-only dependency: shapely; needs
 from __future__ import annotations
 
 import math
+import os
 from pathlib import Path
 
 from fontTools.fontBuilder import FontBuilder
@@ -18,9 +19,9 @@ from shapely.geometry import Polygon
 from shapely.geometry.polygon import orient
 
 SOURCE = "/System/Library/Fonts/Supplemental/GillSans.ttc"
-FACE = "Gill Sans Bold"
-SHADOW = (0.16, -0.11)  # extrusion direction and length, fraction of em (down-right)
-OUT = Path(__file__).resolve().parent.parent / "fonts" / "private" / "Indians.ttf"
+FACE = os.environ.get("INDIANS_FACE", "Gill Sans SemiBold")
+SHADOW = tuple(float(v) for v in os.environ.get("INDIANS_SHADOW", "-0.09,-0.07").split(","))  # extrusion (dx, dy), fraction of em
+OUT = Path(__file__).resolve().parent.parent / "fonts" / "private" / os.environ.get("INDIANS_OUT", "Indians.ttf")
 CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-–:/&'’ĄĆĘŁŃÓŚŹŻ"
 ANGLES = [32, -38, 41, -30, 36, -42, 28, -34]  # cut directions vary letter to letter, like hand cuts
 GAP = 0.035     # slit width, fraction of em
