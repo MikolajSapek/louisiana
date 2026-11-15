@@ -923,7 +923,7 @@ class MapGenerator:
                 fontproperties=font_properties(font_family, bold=True),
                 color=font_color,
                 transform=transform or ax.transAxes,
-                linespacing=1.6,  # Zwiększa odstęp między liniami dla lepszej czytelności
+                linespacing=1.3,  # stacked footer lines (names over date) read as one block
             )
         else:
             # Dla układu poziomego, renderujemy tekst normalnie
@@ -965,7 +965,7 @@ class MapGenerator:
                 fontsize=font_size,
                 fontproperties=font_properties(font_family, bold=True),
                 color=font_color,
-                linespacing=1.6,  # Zwiększa odstęp między liniami dla lepszej czytelności
+                linespacing=1.3,  # stacked footer lines (names over date) read as one block
             )
         else:
             # Dla układu poziomego, renderujemy tekst normalnie
@@ -1440,8 +1440,8 @@ class PosterMapGenerator(MapGenerator):
             self._render_footer_text_fig(
                 fig,
                 self.footer_left_text,
-                0.08,
-                0.06,
+                0.04,  # same margins as the corner logo (_apply_signature: 4 % side, 3 % bottom)
+                0.03,
                 self._detect_footer_layout(self.footer_left_text),
                 'left',
                 font_family,
@@ -1453,8 +1453,8 @@ class PosterMapGenerator(MapGenerator):
             self._render_footer_text_fig(
                 fig,
                 self.footer_right_text,
-                0.92,
-                0.06,
+                0.96,
+                0.03,
                 self._detect_footer_layout(self.footer_right_text),
                 'right',
                 font_family,

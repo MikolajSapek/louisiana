@@ -371,3 +371,14 @@ def test_label_font_url_only_for_private_fonts_when_local(monkeypatch):
     monkeypatch.setattr(backend, "IS_VERCEL", True)
     with backend.app.test_request_context():
         assert backend._label_font_url("North Railway") is None
+
+
+def test_poster_footer_aligns_with_corner_logo_margins():
+    gen = mg.PosterMapGenerator(footer_left_text="Paweł Sofia Mikołaj\n8–14 listopada 2026")
+    fig, ax = plt.subplots()
+    gen._render_text_overlays(ax)
+    footer = [t for t in fig.texts if t.get_text().startswith("Paweł")][0]
+    x, y = footer.get_position()
+    assert (x, y) == (0.04, 0.03)  # same margins as the corner logo: 4 % from the side, 3 % from the bottom
+    assert footer.get_linespacing() <= 1.3
+    plt.close(fig)
