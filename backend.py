@@ -412,7 +412,7 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
         raw = payload.get(key) or ""
         items = raw if isinstance(raw, list) else re.split(r"[\n,]", str(raw))
         options[key] = [s.strip() for s in items if s and s.strip()]
-    for key in ("title_color", "subtitle_color", "label_color"):  # #RRGGBB only; anything else = font colour
+    for key in ("title_color", "subtitle_color", "label_color", "label_face_color"):  # #RRGGBB only; anything else = font colour
         value = payload.get(key)
         options[key] = value if isinstance(value, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", value) else None
     for key in ("title_font_size", "label_font_size", "footer_font_size"):  # absent = format default size

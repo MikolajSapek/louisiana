@@ -530,3 +530,19 @@ def test_centered_stacked_footer_forms_a_pyramid():
 def test_footer_align_from_form(fake_geocoder):
     _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_align": "center"})
     assert options["footer_align"] == "center"
+
+
+def test_label_face_fill_draws_letter_face_under_shadow_label(tmp_path, keep_figure, monkeypatch):
+    monkeypatch.setitem(mg.FACE_FONTS, "helvetica", "Helvetica.ttf")  # stand-in for a shadow font's face
+    gen = mg.PosterMapGenerator(font_family="Helvetica", label_color="#e8e9eb", label_face_color="#062c5e", dpi=20)
+    gen.generate_map(ROUTE[:2], str(tmp_path / "m.png"))
+    gillam = [t for t in plt.gcf().axes[0].texts if t.get_text() == "Gillam"]
+    face = [t for t in gillam if matplotlib.colors.to_hex(t.get_color()) == "#062c5e"][0]
+    label = [t for t in gillam if t is not face][0]
+    assert Path(face.get_fontproperties().get_file()).name == "Helvetica.ttf"
+    assert face.get_position() == label.get_position() and face.get_zorder() < label.get_zorder()
+
+
+def test_label_face_color_from_form(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "label_face_color": "#062C5E"})
+    assert options["label_face_color"] == "#062C5E"

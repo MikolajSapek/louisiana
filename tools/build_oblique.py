@@ -11,7 +11,7 @@ from fontTools.ttLib import TTFont
 
 PRIVATE = Path(__file__).resolve().parent.parent / "fonts" / "private"
 SLANT = -12  # degrees; negative leans left (backslant, the owner chose this)
-SOURCES = ["Indians", "IndiansBold", "IndiansBoldOutline"]
+SOURCES = ["Indians", "IndiansBold", "IndiansBoldOutline", "IndiansFace", "IndiansBoldFace"]
 
 
 def oblique(name: str) -> None:

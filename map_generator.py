@@ -63,6 +63,16 @@ BUNDLED_FONTS = {
     "north railway pl": ("private/NorthRailwayPL.ttf", "private/NorthRailwayPL.ttf"),  # + digits, Ł/ł (tools/build_northrailway_pl.py)  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
 }
+
+# shadow-only fonts -> font with the plain letters (same metrics), used to fill the letter face (label_face_color)
+FACE_FONTS = {
+    "indians": "private/IndiansFace.ttf",
+    "indians italic": "private/IndiansFaceItalic.ttf",
+    "indians bold": "private/IndiansBoldFace.ttf",
+    "indians bold italic": "private/IndiansBoldFaceItalic.ttf",
+    "indians bold outline": "private/IndiansBoldFace.ttf",
+    "indians bold outline italic": "private/IndiansBoldFaceItalic.ttf",
+}
 DOUBLE_LINE_GAP = 0.009  # gap between parallel lines of a repeated leg, as a fraction of the map span
 
 
@@ -241,6 +251,7 @@ class MapGenerator:
         footer_line_gap: Optional[float] = None,
         footer_stroke: Optional[float] = None,
         footer_align: str = "left",
+        label_face_color: Optional[str] = None,
     ):
         self.figsize = figsize
         self.min_margin_deg = min_margin_deg
@@ -306,6 +317,7 @@ class MapGenerator:
         self.footer_line_gap = footer_line_gap  # baseline-to-baseline for stacked footer lines (fraction)
         self.footer_stroke = footer_stroke  # extra weight for stacked footer lines, points
         self.footer_align = footer_align if footer_align in ("left", "center") else "left"
+        self.label_face_color = label_face_color  # fill for the empty letter face of shadow fonts
 
         self._border_shapes_cache: Optional[List[np.ndarray]] = None
         self._border_error: Optional[Exception] = None
@@ -574,6 +586,13 @@ class MapGenerator:
             text.set_bbox(None)
             text.set_visible(render_labels)
             texts.append(text)
+            face_file = FACE_FONTS.get((self.font_family or "").strip().lower())
+            if self.label_face_color and face_file and (FONT_DIR / face_file).exists():
+                # shadow-only faces (Indians) leave the letter itself empty; fill it from the matching face font
+                face = ax.text(target_x, target_y, city["name"], ha="center", va="bottom",
+                               fontproperties=fm.FontProperties(fname=str(FONT_DIR / face_file)),
+                               fontsize=text.get_fontsize(), color=self.label_face_color, zorder=7.9, clip_on=False)
+                face.set_visible(render_labels)
 
         # Jeśli potrzebujemy bardziej zaawansowanego układania podpisów, można
         # ponownie włączyć adjust_text, ale teraz zostawiamy podstawowy offset,

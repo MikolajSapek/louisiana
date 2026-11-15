@@ -23,6 +23,7 @@ FACE = os.environ.get("INDIANS_FACE", "Futura Medium")
 SOURCE = "/System/Library/Fonts/Supplemental/" + ("Futura.ttc" if FACE.startswith("Futura") else "GillSans.ttc")
 OUTLINE = float(os.environ.get("INDIANS_OUTLINE", "0"))  # >0: also draw the letter's outline (Gill Sans Shadowed), fraction of em
 SHADOW = tuple(float(v) for v in os.environ.get("INDIANS_SHADOW", "0.08,-0.03").split(","))  # extrusion (dx, dy), fraction of em
+FACE_ONLY = os.environ.get("INDIANS_FACE_ONLY") == "1"  # plain letters, to fill the shadow font's letter face
 OUT = Path(__file__).resolve().parent.parent / "fonts" / "private" / os.environ.get("INDIANS_OUT", "Indians.ttf")
 CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,-–:/&'’ĄĆĘŁŃÓŚŹŻ"
 ANGLES = [32, -38, 41, -30, 36, -42, 28, -34]  # cut directions vary letter to letter, like hand cuts
@@ -129,7 +130,8 @@ def build():
         name = cmap_src.get(ord(ch))
         if name is None:
             continue
-        shape = shadow(glyph_shape(src, name), em)
+        letter = glyph_shape(src, name)
+        shape = letter if FACE_ONLY else shadow(letter, em)
         gname = f"g{ord(ch):04X}"
         glyphs[gname] = draw(shape)
         metrics[gname] = (hmtx[name][0], int(shape.bounds[0]) if not shape.is_empty else 0)
