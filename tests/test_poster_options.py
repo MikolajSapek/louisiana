@@ -382,3 +382,16 @@ def test_poster_footer_aligns_with_corner_logo_margins():
     assert (x, y) == (0.04, 0.03)  # same margins as the corner logo: 4 % from the side, 3 % from the bottom
     assert footer.get_linespacing() <= 1.3
     plt.close(fig)
+
+
+@pytest.mark.skipif(not (ROOT / "fonts" / "private" / "NorthRailwayPL.ttf").exists(), reason="private font only on the owner's Mac")
+def test_north_railway_pl_covers_the_footer():
+    from matplotlib import ft2font
+    assert Path(mg.font_properties("North Railway PL").get_file()).name == "NorthRailwayPL.ttf"
+    face = ft2font.FT2Font(str(ROOT / "fonts" / "private" / "NorthRailwayPL.ttf"))
+    assert all(face.get_char_index(ord(c)) for c in "Paweł Sofia Mikołaj 8–14 listopada 2026" if c != " ")
+
+
+def test_footer_font_size_from_form_reaches_generator(fake_geocoder):
+    _, _, options, _ = backend._prepare_generation({"cities": ["A", "B"], "footer_font_size": "50"})
+    assert options["footer_font_size"] == 50.0

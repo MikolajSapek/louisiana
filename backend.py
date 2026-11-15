@@ -385,7 +385,7 @@ def _prepare_generation(payload: Dict[str, Any]) -> tuple[List[Dict[str, Any]], 
     for key in ("title_color", "subtitle_color", "label_color"):  # #RRGGBB only; anything else = font colour
         value = payload.get(key)
         options[key] = value if isinstance(value, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", value) else None
-    for key in ("title_font_size", "label_font_size"):  # absent = each paper format's default size
+    for key in ("title_font_size", "label_font_size", "footer_font_size"):  # absent = format default size
         try:
             if payload.get(key) not in (None, ""):
                 options[key] = max(6.0, min(float(payload[key]), 400.0))

@@ -37,7 +37,8 @@ BUNDLED_FONTS = {
     # private, local-only (fonts/private is git- and vercel-ignored): personal posters, never published
     "mounties": ("private/Mounties.ttf", "private/Mounties.ttf"),
     "indians": ("private/Indians.ttf", "private/Indians.ttf"),  # tools/build_indians_font.py
-    "north railway": ("private/NorthRailway-DEMO.ttf", "private/NorthRailway-DEMO.ttf"),  # demo: A-Z only, private use  # closest to the "Mounties" sign lettering
+    "north railway": ("private/NorthRailway-DEMO.ttf", "private/NorthRailway-DEMO.ttf"),  # demo: A-Z only, private use
+    "north railway pl": ("private/NorthRailwayPL.ttf", "private/NorthRailwayPL.ttf"),  # + digits, Ł/ł (tools/build_northrailway_pl.py)  # closest to the "Mounties" sign lettering
     "euphemia ucas": ("EuphemiaUCAS.ttf", "EuphemiaUCASBold.ttf"),
 }
 DOUBLE_LINE_GAP = 0.009  # gap between parallel lines of a repeated leg, as a fraction of the map span
